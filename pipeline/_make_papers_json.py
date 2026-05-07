@@ -22,22 +22,42 @@ ABSTRACT_LIMIT = 400   # 초록 최대 글자 수 (키워드 검색용)
 MAX_AUTHORS    = 5     # 저자 최대 표시 수
 
 import re
-# 제목이 이 패턴에 해당하면 비논문 항목으로 제외
+import html as html_mod
+
+# ── HTML 정제 ────────────────────────────────────────────────────────────
+_INLINE_FORMULA = re.compile(r'<inline-formula\b[^>]*>.*?</inline-formula>', re.IGNORECASE | re.DOTALL)
+_HTML_TAG       = re.compile(r'<[^>]+>')
+_MULTI_SPACE    = re.compile(r'\s{2,}')
+
+def clean_title(title: str) -> str:
+    if not title:
+        return ''
+    # inline-formula 블록 전체 제거 (이중 인코딩된 LaTeX 포함)
+    title = _INLINE_FORMULA.sub('', title)
+    # 남은 HTML 태그 제거 (<b>, <i>, <italic> 등)
+    title = _HTML_TAG.sub('', title)
+    # HTML 엔티티 디코딩 (&lt; → <, &amp; → & 등)
+    title = html_mod.unescape(title)
+    # 연속 공백 정리
+    title = _MULTI_SPACE.sub(' ', title).strip()
+    return title
+
+# ── 비논문 필터 ──────────────────────────────────────────────────────────
 _JUNK_PATTERNS = re.compile(
-    r"^\s*$"                                    # 빈 제목
-    r"|^\d{4}\s+(Index|IEEE\b)"                 # "2004 Index", "2006 IEEE International..."
-    r"|^Index\b"                                # "Index to ..."
-    r"|^(Front\s+Matter|Back\s+Matter)"         # 표지/후면
-    r"|^Table\s+of\s+Contents"                  # 목차
-    r"|^(Errata|Erratum|Correction\s+to\b)"     # 정오표
-    r"|^(Obituary|In\s+Memoriam)\b"             # 부고
-    r"|^Masthead\b"                             # 판권면
-    r"|^Blank\s+Page",                          # 빈 페이지
+    r"^\s*$"                                      # 빈 제목
+    r"|^\[?Blank\s+[Pp]age\]?"                    # [Blank page] / Blank Page
+    r"|^\d{4}\s+(Index|IEEE\b)"                   # "2004 Index", "2006 IEEE International..."
+    r"|^Index\b"                                  # "Index to ..."
+    r"|^(Front\s+Matter|Back\s+Matter)"           # 표지/후면
+    r"|^Table\s+of\s+Contents"                    # 목차
+    r"|^(Errata|Erratum|Correction\s+to\b)"       # 정오표
+    r"|^(Obituary|In\s+Memoriam)\b"               # 부고
+    r"|^Masthead\b",                              # 판권면
     re.IGNORECASE,
 )
 
 def is_junk(p: dict) -> bool:
-    title = (p.get("title") or "").strip()
+    title = clean_title(p.get("title") or "")
     if not title:
         return True
     if _JUNK_PATTERNS.search(title):
@@ -58,10 +78,10 @@ def slim(p: dict) -> dict:
 
     venue = p.get("venue", "")
     return {
-        "v":  LABEL_TO_ID.get(venue, venue.lower()),  # venue_id
-        "j":  venue,                                    # journal label
+        "v":  LABEL_TO_ID.get(venue, venue.lower()),
+        "j":  venue,
         "y":  int(p.get("year") or 0),
-        "t":  (p.get("title") or "").strip(),
+        "t":  clean_title(p.get("title") or ""),
         "a":  authors,
         "d":  (p.get("doi") or "").strip(),
         "c":  int(p.get("citation_count") or 0),
