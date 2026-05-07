@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Paper Atlas — Explorer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <style>
   :root {
     --bg: #0f1117; --surface: #1a1d27; --border: #2d3148;
@@ -46,7 +48,7 @@
   .year-filter { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
   .year-filter input { width: 60px; background: var(--surface); border: 1px solid var(--border);
                         border-radius: 4px; color: var(--text); padding: 3px 6px; }
-  /* keyword search */
+  /* keyword/author search */
   .kw-row { display: flex; align-items: center; gap: 6px; padding: 6px 16px;
              border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .kw-input { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
@@ -63,9 +65,19 @@
                padding: 4px 10px; font-size: 12px; cursor: pointer; }
   .kw-clear:hover { color: var(--text); border-color: var(--text); }
   .kw-label { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .search-btn { background: var(--accent); border: none; border-radius: 6px; color: #fff;
+                 padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .search-btn:hover { opacity: .85; }
   .home-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
                padding: 5px 12px; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
   .home-btn:hover { color: var(--text); border-color: var(--text); }
+  /* load more */
+  #load-more-area { padding: 16px; text-align: center; }
+  #loadMoreBtn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                  color: var(--text); padding: 10px 32px; font-size: 13px; cursor: pointer; }
+  #loadMoreBtn:hover { border-color: var(--accent); color: var(--accent); }
+  /* KaTeX inline sizing */
+  .katex { font-size: 1em; }
 </style>
 </head>
 <body>
@@ -115,28 +127,34 @@
     <!-- 키워드 검색 행 -->
     <div class="kw-row">
       <span class="kw-label">KEYWORD</span>
-      <input class="kw-input" id="kw1" placeholder="Keyword 1…" oninput="onKwInput(this,'kw1')">
+      <input class="kw-input" id="kw1" placeholder="Keyword 1…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
       <div class="op-btn" id="op12">
         <button class="active" onclick="setOp('op12','AND',this)">AND</button>
         <button onclick="setOp('op12','OR',this)">OR</button>
       </div>
-      <input class="kw-input" id="kw2" placeholder="Keyword 2…" oninput="onKwInput(this,'kw2')">
+      <input class="kw-input" id="kw2" placeholder="Keyword 2…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
       <div class="op-btn" id="op23">
         <button class="active" onclick="setOp('op23','AND',this)">AND</button>
         <button onclick="setOp('op23','OR',this)">OR</button>
       </div>
-      <input class="kw-input" id="kw3" placeholder="Keyword 3…" oninput="onKwInput(this,'kw3')">
-      <select class="kw-scope" id="kwScope" onchange="applyFilters()" title="검색 범위">
+      <input class="kw-input" id="kw3" placeholder="Keyword 3…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+      <select class="kw-scope" id="kwScope" title="검색 범위">
         <option value="title">Title</option>
         <option value="title_abstract" selected>Title + Abstract</option>
         <option value="all">Title + Abstract + Authors</option>
       </select>
+      <button class="search-btn" onclick="applyFilters()">검색</button>
       <button class="kw-clear" onclick="clearKeywords()">✕ Clear</button>
     </div>
     <!-- 저자 검색 행 -->
     <div class="kw-row">
       <span class="kw-label">AUTHOR</span>
-      <input class="kw-input" id="authorKw" placeholder="Author name…" style="width:260px" oninput="onAuthorInput(this)">
+      <input class="kw-input" id="authorKw" placeholder="Author name…" style="width:260px"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+      <button class="search-btn" onclick="applyFilters()">검색</button>
       <button class="kw-clear" onclick="clearAuthor()">✕ Clear</button>
     </div>
     <!-- 기본 필터 행 -->
@@ -168,32 +186,36 @@
         </thead>
         <tbody id="tbody"></tbody>
       </table>
+      <div id="load-more-area" style="display:none">
+        <button id="loadMoreBtn" onclick="loadMore()">더 보기</button>
+      </div>
     </main>
   </div>
 </div>
 <script>
-const VENUE_COLORS = {"tro": "#1f77b4", "ijrr": "#4c9fda", "scirob": "#17becf", "tac": "#2ca02c", "automatica": "#52be52", "ijrnc": "#98df8a", "nonlindyn": "#3d8c3d", "jfi": "#74c476", "tmech": "#ff7f0e", "tie": "#d62728", "tii": "#e07070", "taes": "#9467bd", "jgcd": "#c5b0d5", "ast": "#7b4d9e", "tits": "#8c564b", "tvt": "#c49c94", "tiv": "#5b3a29"};
-// papers.json을 fetch로 로드 (필드 단축키: v=venue_id, j=venue, y=year, t=title, a=authors, d=doi, c=citation_count, ab=abstract)
+const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","tac":"#2ca02c","automatica":"#52be52","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
 let ALL_PAPERS = [];
-const PAGE_SIZE = 200;
+const PAGE_SIZE = 20;
 let filtered = [];
 let page = 0;
-let loading = false;
 let dataLoaded = false;
 
-// ── AND/OR 키워드 상태 ──────────────────────────────────────────────
 const OPS = { op12: 'AND', op23: 'AND' };
+
+// ── 이벤트 핸들러 ──────────────────────────────────────────────────────
+
+function handleSearchKey(e) {
+  if (e.key === 'Enter') applyFilters();
+}
+
+function markHasValue(el) {
+  el.classList.toggle('has-value', el.value.trim() !== '');
+}
 
 function setOp(groupId, op, btn) {
   OPS[groupId] = op;
   document.querySelectorAll(`#${groupId} button`).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  applyFilters();
-}
-
-function onKwInput(el, id) {
-  el.classList.toggle('has-value', el.value.trim() !== '');
-  applyFilters();
 }
 
 function clearKeywords() {
@@ -205,11 +227,6 @@ function clearKeywords() {
   applyFilters();
 }
 
-function onAuthorInput(el) {
-  el.classList.toggle('has-value', el.value.trim() !== '');
-  applyFilters();
-}
-
 function clearAuthor() {
   const el = document.getElementById('authorKw');
   el.value = '';
@@ -217,29 +234,57 @@ function clearAuthor() {
   applyFilters();
 }
 
-function normalizeText(str) {
-  return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-}
-
-function kwMatch(haystack, kws, ops) {
-  // kws = [kw1, kw2, kw3], ops = [op12, op23]
-  // 빈 키워드 무시, 왼쪽부터 순서대로 AND/OR 적용
-  const terms = kws.map(k => normalizeText(k).trim()).filter(k => k);
-  if (!terms.length) return true;
-
-  let result = haystack.includes(terms[0]);
-  for (let i = 1; i < terms.length; i++) {
-    const op  = ops[i - 1];
-    const hit = haystack.includes(terms[i]);
-    result = op === 'AND' ? (result && hit) : (result || hit);
-  }
-  return result;
-}
-
 function toggleAll(cb) {
   document.querySelectorAll('.venue-cb input').forEach(c => { c.checked = cb.checked; });
   applyFilters();
 }
+
+// ── 텍스트 정규화 / LaTeX 렌더링 ────────────────────────────────────────
+
+function normalizeText(str) {
+  return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function preprocessLatex(math) {
+  return math
+    .replace(/\{\\cal\s+([^}]+)\}/g,  '\\mathcal{$1}')
+    .replace(/\{\\bf\s+([^}]+)\}/g,   '\\mathbf{$1}')
+    .replace(/\{\\it\s+([^}]+)\}/g,   '\\mathit{$1}')
+    .replace(/\{\\rm\s+([^}]+)\}/g,   '\\mathrm{$1}')
+    .replace(/\{\\tt\s+([^}]+)\}/g,   '\\texttt{$1}')
+    .replace(/\{\\em\s+([^}]+)\}/g,   '\\textit{$1}');
+}
+
+function renderTitle(title) {
+  if (!title) return '';
+  const parts = title.split(/(\$[^$]+\$)/g);
+  return parts.map(part => {
+    if (part.startsWith('$') && part.endsWith('$') && typeof katex !== 'undefined') {
+      const math = preprocessLatex(part.slice(1, -1));
+      try {
+        return katex.renderToString(math, { throwOnError: false, output: 'html' });
+      } catch(e) {
+        return escHtml(part);
+      }
+    }
+    return escHtml(part);
+  }).join('');
+}
+
+// ── 키워드 매칭 ──────────────────────────────────────────────────────────
+
+function kwMatch(haystack, kws, ops) {
+  const terms = kws.map(k => normalizeText(k).trim()).filter(k => k);
+  if (!terms.length) return true;
+  let result = haystack.includes(terms[0]);
+  for (let i = 1; i < terms.length; i++) {
+    const hit = haystack.includes(terms[i]);
+    result = ops[i-1] === 'AND' ? (result && hit) : (result || hit);
+  }
+  return result;
+}
+
+// ── 필터 적용 ────────────────────────────────────────────────────────────
 
 function applyFilters() {
   if (!dataLoaded) return;
@@ -263,13 +308,12 @@ function applyFilters() {
     const abstract = normalizeText(p.abstract || '');
     const authors  = normalizeText(Array.isArray(p.authors) ? p.authors.join(' ') : (p.authors || ''));
 
-    // 저자 필터
     if (authorKw && !authors.includes(authorKw)) return false;
 
     let haystack;
-    if      (scope === 'title')           haystack = title;
-    else if (scope === 'title_abstract')  haystack = title + ' ' + abstract;
-    else                                   haystack = title + ' ' + abstract + ' ' + authors;
+    if      (scope === 'title')          haystack = title;
+    else if (scope === 'title_abstract') haystack = title + ' ' + abstract;
+    else                                  haystack = title + ' ' + abstract + ' ' + authors;
 
     if (!kwMatch(haystack, [kw1, kw2, kw3], ops)) return false;
     return true;
@@ -282,28 +326,30 @@ function applyFilters() {
 
   document.getElementById('count').textContent = filtered.length.toLocaleString() + ' papers';
   page = 0;
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
+  document.getElementById('tbody').innerHTML = '';
   renderPage();
 }
 
+// ── 렌더링 ──────────────────────────────────────────────────────────────
+
 function renderPage() {
-  if (loading) return;
   const start = page * PAGE_SIZE;
   const slice = filtered.slice(start, start + PAGE_SIZE);
-  if (!slice.length) return;
-  loading = true;
+  if (!slice.length) {
+    updateLoadMoreBtn();
+    return;
+  }
   const frag = document.createDocumentFragment();
   slice.forEach(p => {
     const tr = document.createElement('tr');
     const color = VENUE_COLORS[p.venue_id] || '#999';
-    const doi   = p.doi ? `https://doi.org/${p.doi}` : (p.url || '#');
+    const doi   = p.doi ? `https://doi.org/${p.doi}` : '#';
     const authors = Array.isArray(p.authors) ? p.authors.join(', ') : (p.authors || '');
     const short_authors = authors.length > 80 ? authors.slice(0,80)+'…' : authors;
     tr.innerHTML = `
       <td>${p.year||''}</td>
       <td><span class="badge" style="background:${color}">${p.venue||''}</span></td>
-      <td class="title"><a href="${doi}" target="_blank" rel="noopener">${escHtml(p.title||'')}</a></td>
+      <td class="title"><a href="${doi}" target="_blank" rel="noopener">${renderTitle(p.title||'')}</a></td>
       <td class="authors" title="${escHtml(authors)}">${escHtml(short_authors)}</td>
       <td class="cite">${p.citation_count||''}</td>
     `;
@@ -311,19 +357,31 @@ function renderPage() {
   });
   document.getElementById('tbody').appendChild(frag);
   page++;
-  loading = false;
+  updateLoadMoreBtn();
+}
+
+function loadMore() {
+  renderPage();
+}
+
+function updateLoadMoreBtn() {
+  const area = document.getElementById('load-more-area');
+  const btn  = document.getElementById('loadMoreBtn');
+  const remaining = filtered.length - page * PAGE_SIZE;
+  if (remaining > 0) {
+    area.style.display = '';
+    btn.textContent = `더 보기 (${remaining.toLocaleString()}개 남음)`;
+  } else {
+    area.style.display = 'none';
+  }
 }
 
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// infinite scroll
-document.querySelector('main').addEventListener('scroll', function() {
-  if (this.scrollTop + this.clientHeight >= this.scrollHeight - 200) renderPage();
-});
+// ── 데이터 로드 ──────────────────────────────────────────────────────────
 
-// papers.json 로드
 (async function() {
   const status = document.getElementById('count');
   status.textContent = '데이터 로딩 중…';
@@ -331,7 +389,6 @@ document.querySelector('main').addEventListener('scroll', function() {
     const res = await fetch('papers.json');
     if (!res.ok) throw new Error('papers.json 로드 실패: ' + res.status);
     const raw = await res.json();
-    // 단축 필드 → 표준 필드로 변환
     ALL_PAPERS = raw.map(p => ({
       venue_id:       p.v || '',
       venue:          p.j || '',
