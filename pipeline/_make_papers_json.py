@@ -63,6 +63,18 @@ _MACHINE_TRANS = re.compile(
     r"|【機械翻訳】",
 )
 
+# 비영어 스크립트 감지 (목표 저널은 전부 영어 출판)
+_HIRAGANA_KATAKANA = re.compile(r'[぀-ヿ]')   # 히라가나·가타카나
+_ARABIC_CHAR       = re.compile(r'[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]')
+
+def has_non_english_script(title: str) -> bool:
+    if _HIRAGANA_KATAKANA.search(title):
+        return True
+    arabic_count = len(_ARABIC_CHAR.findall(title))
+    if arabic_count > 3 and arabic_count / max(len(title), 1) > 0.2:
+        return True
+    return False
+
 def is_junk(p: dict) -> bool:
     title = clean_title(p.get("title") or "")
     if not title:
@@ -70,6 +82,8 @@ def is_junk(p: dict) -> bool:
     if _JUNK_PATTERNS.search(title):
         return True
     if _MACHINE_TRANS.search(title):
+        return True
+    if has_non_english_script(title):
         return True
     return False
 
