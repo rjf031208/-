@@ -1,0 +1,23 @@
+# Claude Code 로컬 설정
+.claude/
+
+# 파이프라인 중간 데이터 (용량 과대)
+pipeline/dblp_raw/
+pipeline/openalex_raw/
+pipeline/all_dblp.json
+pipeline/all_enriched.json
+pipeline/enrich_cache.json
+pipeline/enriched_checkpoint_*.json
+pipeline/word_book.*
+
+# Excel 파일 (웹 서비스 불필요, 로컬에서만 사용)
+*.xlsx
+by_venue/
+
+# 이전 버전
+ver1/
+
+# Python
+__pycache__/
+*.pyc
+.env

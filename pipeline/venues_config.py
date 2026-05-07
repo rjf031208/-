@@ -1,0 +1,169 @@
+"""
+Central venue configuration for the paper atlas pipeline.
+Modify DBLP_VENUES and OPENALEX_VENUES to change which journals are collected.
+Modify VENUES_CFG to change visualization settings.
+"""
+
+# ── DBLP 수집 대상 (사용 안 함 — 이 저널들은 DBLP 커버리지 없음) ──────────────
+DBLP_VENUES = []
+
+# ── OpenAlex ISSN 수집 대상 ────────────────────────────────────────────────────
+# DBLP는 CS 저널 위주라 공학 저널 커버리지가 없음.
+# OpenAlex는 전 학문 분야를 커버하므로 모든 저널을 여기서 수집.
+# issn_l : 저널의 print ISSN
+
+OPENALEX_VENUES = [
+    # ── Robotics ──────────────────────────────────────────────────────────────
+    {
+        "key":    "tro",
+        "label":  "T-RO",
+        "issn_l": "1552-3098",   # IEEE Transactions on Robotics
+        "years":  range(2004, 2027),
+    },
+    {
+        "key":    "ijrr",
+        "label":  "IJRR",
+        "issn_l": "0278-3649",   # The International Journal of Robotics Research
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "scirob",
+        "label":  "Sci-Rob",
+        "issn_l": "2470-9476",   # Science Robotics
+        "years":  range(2016, 2027),
+    },
+
+    # ── Control Theory ────────────────────────────────────────────────────────
+    {
+        "key":    "tac",
+        "label":  "T-AC",
+        "issn_l": "0018-9286",   # IEEE Transactions on Automatic Control
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "automatica",
+        "label":  "Automatica",
+        "issn_l": "0005-1098",   # Automatica
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "ijrnc",
+        "label":  "IJRNC",
+        "issn_l": "1049-8923",   # Intl. Journal of Robust and Nonlinear Control
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "nonlindyn",
+        "label":  "NonlinDyn",
+        "issn_l": "0924-090X",   # Nonlinear Dynamics
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "jfi",
+        "label":  "JFI",
+        "issn_l": "0016-0032",   # Journal of the Franklin Institute
+        "years":  range(2000, 2027),
+    },
+
+    # ── Mechatronics ──────────────────────────────────────────────────────────
+    {
+        "key":    "tmech",
+        "label":  "T-Mech",
+        "issn_l": "1083-4435",   # IEEE/ASME Transactions on Mechatronics
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "tie",
+        "label":  "T-IE",
+        "issn_l": "0278-0046",   # IEEE Transactions on Industrial Electronics
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "tii",
+        "label":  "T-II",
+        "issn_l": "1551-3203",   # IEEE Transactions on Industrial Informatics
+        "years":  range(2005, 2027),
+    },
+
+    # ── Aerospace ─────────────────────────────────────────────────────────────
+    {
+        "key":    "taes",
+        "label":  "T-AES",
+        "issn_l": "0018-9251",   # IEEE Transactions on Aerospace and Electronic Systems
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "jgcd",
+        "label":  "JGCD",
+        "issn_l": "0731-5090",   # Journal of Guidance, Control, and Dynamics
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "ast",
+        "label":  "AST",
+        "issn_l": "1270-9638",   # Aerospace Science and Technology
+        "years":  range(2000, 2027),
+    },
+
+    # ── Vehicle / Transportation ──────────────────────────────────────────────
+    {
+        "key":    "tits",
+        "label":  "T-ITS",
+        "issn_l": "1524-9050",   # IEEE Transactions on Intelligent Transportation Systems
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "tvt",
+        "label":  "T-VT",
+        "issn_l": "0018-9545",   # IEEE Transactions on Vehicular Technology
+        "years":  range(2000, 2027),
+    },
+    {
+        "key":    "tiv",
+        "label":  "T-IV",
+        "issn_l": "2379-8858",   # IEEE Transactions on Intelligent Vehicles
+        "years":  range(2016, 2027),
+    },
+]
+
+# ── 시각화 설정 (HTML 생성기에서 사용) ─────────────────────────────────────────
+# 카테고리별 색상 그룹으로 구성
+VENUES_CFG = [
+    # ── Robotics (파란 계열) ──────────────────────────────────────────────────
+    {"label": "T-RO",      "id": "tro",       "color": "#1f77b4", "since": 2004, "category": "Robotics"},
+    {"label": "IJRR",      "id": "ijrr",      "color": "#4c9fda", "since": 1982, "category": "Robotics"},
+    {"label": "Sci-Rob",   "id": "scirob",    "color": "#17becf", "since": 2016, "category": "Robotics"},
+
+    # ── Control Theory (초록 계열) ────────────────────────────────────────────
+    {"label": "T-AC",      "id": "tac",       "color": "#2ca02c", "since": 1990, "category": "Control Theory"},
+    {"label": "Automatica","id": "automatica","color": "#52be52", "since": 1990, "category": "Control Theory"},
+    {"label": "IJRNC",     "id": "ijrnc",     "color": "#98df8a", "since": 2000, "category": "Control Theory"},
+    {"label": "NonlinDyn", "id": "nonlindyn", "color": "#3d8c3d", "since": 2000, "category": "Control Theory"},
+    {"label": "JFI",       "id": "jfi",       "color": "#74c476", "since": 2000, "category": "Control Theory"},
+
+    # ── Mechatronics (주황/빨강 계열) ─────────────────────────────────────────
+    {"label": "T-Mech",    "id": "tmech",     "color": "#ff7f0e", "since": 1996, "category": "Mechatronics"},
+    {"label": "T-IE",      "id": "tie",       "color": "#d62728", "since": 2000, "category": "Mechatronics"},
+    {"label": "T-II",      "id": "tii",       "color": "#e07070", "since": 2005, "category": "Mechatronics"},
+
+    # ── Aerospace (보라 계열) ─────────────────────────────────────────────────
+    {"label": "T-AES",     "id": "taes",      "color": "#9467bd", "since": 1990, "category": "Aerospace"},
+    {"label": "JGCD",      "id": "jgcd",      "color": "#c5b0d5", "since": 2000, "category": "Aerospace"},
+    {"label": "AST",       "id": "ast",       "color": "#7b4d9e", "since": 2000, "category": "Aerospace"},
+
+    # ── Vehicle / Transportation (갈색/회색 계열) ─────────────────────────────
+    {"label": "T-ITS",     "id": "tits",      "color": "#8c564b", "since": 2000, "category": "Vehicle"},
+    {"label": "T-VT",      "id": "tvt",       "color": "#c49c94", "since": 2000, "category": "Vehicle"},
+    {"label": "T-IV",      "id": "tiv",       "color": "#5b3a29", "since": 2016, "category": "Vehicle"},
+]
+
+# deduplication 우선순위: 앞쪽 저널이 더 높은 우선순위
+DEDUP_ORDER = [v["label"] for v in VENUES_CFG]
+
+CATEGORY_COLORS = {
+    "Robotics":       "#1f77b4",
+    "Control Theory": "#2ca02c",
+    "Mechatronics":   "#ff7f0e",
+    "Aerospace":      "#9467bd",
+    "Vehicle":        "#8c564b",
+}

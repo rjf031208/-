@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Atlas — By Year</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0f1117; --surface:#1a1d27; --border:#2d3148; --text:#e2e8f0; --muted:#718096; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; }
+  header { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; }
+  header h1 { font-size:18px; font-weight:700; }
+  .stamp { color:var(--muted); font-size:12px; }
+  .container { display:flex; height:calc(100vh - 57px); }
+  aside { width:200px; min-width:200px; border-right:1px solid var(--border); overflow-y:auto; padding:12px; }
+  main { flex:1; padding:16px; overflow:auto; }
+  canvas { max-height:420px; }
+  .chart-mode { display:flex; gap:8px; margin-bottom:12px; }
+  .chart-mode button { background:var(--surface); border:1px solid var(--border); color:var(--text);
+                        border-radius:6px; padding:4px 12px; cursor:pointer; font-size:13px; }
+  .chart-mode button.active { border-color:#4f9cf9; color:#4f9cf9; }
+  .legend-group { margin-bottom:8px; }
+  .legend-group-title { font-size:11px; font-weight:700; text-transform:uppercase;
+                         letter-spacing:.5px; display:block; margin-bottom:4px; }
+  .legend-item { display:flex; align-items:center; gap:5px; cursor:pointer;
+                  font-size:12px; padding:2px 0; white-space:nowrap; }
+  .legend-item input { accent-color:#4f9cf9; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .summary-table { margin-top:24px; width:100%; border-collapse:collapse; font-size:13px; }
+  .summary-table th { background:var(--surface); padding:6px 10px; text-align:left;
+                       border-bottom:1px solid var(--border); color:var(--muted); font-size:11px; }
+  .summary-table td { padding:6px 10px; border-bottom:1px solid var(--border); }
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 Paper Atlas — By Year</h1>
+  <span class="stamp">Updated 2026-05-07</span>
+  <span class="stamp" style="margin-left:auto">149,980 total papers</span>
+</header>
+<div class="container">
+  <aside>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;">Journals</div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:8px;cursor:pointer;">
+      <input type="checkbox" id="checkAll" checked onchange="toggleAll(this)"> All
+    </label>
+    <div class="legend-group"><span class="legend-group-title" style="color:#1f77b4">Robotics</span>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-RO" checked><span class="legend-dot" style="background:#1f77b4"></span>T-RO</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="IJRR" checked><span class="legend-dot" style="background:#4c9fda"></span>IJRR</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="Sci-Rob" checked><span class="legend-dot" style="background:#17becf"></span>Sci-Rob</label>
+</div>
+<div class="legend-group"><span class="legend-group-title" style="color:#2ca02c">Control Theory</span>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-AC" checked><span class="legend-dot" style="background:#2ca02c"></span>T-AC</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="Automatica" checked><span class="legend-dot" style="background:#52be52"></span>Automatica</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="IJRNC" checked><span class="legend-dot" style="background:#98df8a"></span>IJRNC</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="NonlinDyn" checked><span class="legend-dot" style="background:#3d8c3d"></span>NonlinDyn</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="JFI" checked><span class="legend-dot" style="background:#74c476"></span>JFI</label>
+</div>
+<div class="legend-group"><span class="legend-group-title" style="color:#ff7f0e">Mechatronics</span>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-Mech" checked><span class="legend-dot" style="background:#ff7f0e"></span>T-Mech</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-IE" checked><span class="legend-dot" style="background:#d62728"></span>T-IE</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-II" checked><span class="legend-dot" style="background:#e07070"></span>T-II</label>
+</div>
+<div class="legend-group"><span class="legend-group-title" style="color:#9467bd">Aerospace</span>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-AES" checked><span class="legend-dot" style="background:#9467bd"></span>T-AES</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="JGCD" checked><span class="legend-dot" style="background:#c5b0d5"></span>JGCD</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="AST" checked><span class="legend-dot" style="background:#7b4d9e"></span>AST</label>
+</div>
+<div class="legend-group"><span class="legend-group-title" style="color:#8c564b">Vehicle</span>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-ITS" checked><span class="legend-dot" style="background:#8c564b"></span>T-ITS</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-VT" checked><span class="legend-dot" style="background:#c49c94"></span>T-VT</label>
+<label class="legend-item"><input type="checkbox" class="toggle-venue" data-label="T-IV" checked><span class="legend-dot" style="background:#5b3a29"></span>T-IV</label>
+</div>
+  </aside>
+  <main>
+    <div class="chart-mode">
+      <button class="active" onclick="setMode('line',this)">Line</button>
+      <button onclick="setMode('bar',this)">Stacked Bar</button>
+    </div>
+    <canvas id="chart"></canvas>
+    <table class="summary-table">
+      <thead><tr><th>Journal</th><th>Category</th><th>Since</th><th>Total Papers</th></tr></thead>
+      <tbody>
+        <tr><td><b>T-RO</b></td><td>Robotics</td><td>2004</td><td>3,503</td></tr><tr><td><b>IJRR</b></td><td>Robotics</td><td>1982</td><td>2,244</td></tr><tr><td><b>Sci-Rob</b></td><td>Robotics</td><td>2016</td><td>920</td></tr><tr><td><b>T-AC</b></td><td>Control Theory</td><td>1990</td><td>12,671</td></tr><tr><td><b>Automatica</b></td><td>Control Theory</td><td>1990</td><td>10,886</td></tr><tr><td><b>IJRNC</b></td><td>Control Theory</td><td>2000</td><td>7,232</td></tr><tr><td><b>NonlinDyn</b></td><td>Control Theory</td><td>2000</td><td>14,099</td></tr><tr><td><b>JFI</b></td><td>Control Theory</td><td>2000</td><td>7,825</td></tr><tr><td><b>T-Mech</b></td><td>Mechatronics</td><td>1996</td><td>6,037</td></tr><tr><td><b>T-IE</b></td><td>Mechatronics</td><td>2000</td><td>18,913</td></tr><tr><td><b>T-II</b></td><td>Mechatronics</td><td>2005</td><td>9,132</td></tr><tr><td><b>T-AES</b></td><td>Aerospace</td><td>1990</td><td>8,323</td></tr><tr><td><b>JGCD</b></td><td>Aerospace</td><td>2000</td><td>5,477</td></tr><tr><td><b>AST</b></td><td>Aerospace</td><td>2000</td><td>9,776</td></tr><tr><td><b>T-ITS</b></td><td>Vehicle</td><td>2000</td><td>11,216</td></tr><tr><td><b>T-VT</b></td><td>Vehicle</td><td>2000</td><td>19,676</td></tr><tr><td><b>T-IV</b></td><td>Vehicle</td><td>2016</td><td>2,050</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+<script>
+const RAW = {"labels": [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], "datasets": [{"label": "T-RO", "data": [0, 0, 0, 0, 59, 141, 135, 131, 144, 149, 102, 142, 118, 114, 118, 130, 152, 122, 131, 124, 152, 209, 205, 267, 261, 316, 81], "backgroundColor": "#1f77b4", "borderColor": "#1f77b4", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "IJRR", "data": [78, 60, 70, 63, 74, 64, 69, 78, 64, 144, 76, 85, 91, 119, 94, 116, 47, 97, 90, 105, 99, 51, 35, 94, 115, 123, 43], "backgroundColor": "#4c9fda", "borderColor": "#4c9fda", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "Sci-Rob", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 53, 78, 84, 83, 123, 90, 95, 138, 132, 38], "backgroundColor": "#17becf", "borderColor": "#17becf", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-AC", "data": [363, 313, 312, 368, 333, 310, 303, 343, 352, 449, 499, 443, 335, 300, 533, 535, 570, 618, 525, 594, 665, 625, 623, 684, 746, 698, 232], "backgroundColor": "#2ca02c", "borderColor": "#2ca02c", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "Automatica", "data": [195, 262, 288, 294, 288, 249, 268, 310, 371, 397, 272, 375, 430, 425, 419, 447, 434, 527, 547, 561, 531, 579, 593, 564, 495, 587, 178], "backgroundColor": "#52be52", "borderColor": "#52be52", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "IJRNC", "data": [107, 100, 91, 108, 110, 75, 127, 148, 132, 165, 143, 188, 186, 204, 179, 185, 236, 288, 327, 399, 504, 579, 593, 584, 627, 646, 201], "backgroundColor": "#98df8a", "borderColor": "#98df8a", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "NonlinDyn", "data": [69, 75, 84, 85, 101, 90, 200, 189, 139, 176, 297, 379, 409, 482, 681, 713, 738, 726, 707, 733, 662, 964, 1117, 980, 1587, 1141, 575], "backgroundColor": "#3d8c3d", "borderColor": "#3d8c3d", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "JFI", "data": [62, 49, 42, 39, 63, 57, 107, 47, 61, 106, 150, 206, 163, 317, 242, 315, 345, 402, 459, 615, 574, 512, 605, 578, 750, 680, 279], "backgroundColor": "#74c476", "borderColor": "#74c476", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-Mech", "data": [49, 56, 56, 58, 70, 84, 87, 85, 88, 151, 140, 170, 141, 170, 274, 260, 247, 254, 259, 324, 428, 370, 429, 423, 524, 627, 213], "backgroundColor": "#ff7f0e", "borderColor": "#ff7f0e", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-IE", "data": [159, 156, 144, 153, 167, 188, 207, 308, 636, 671, 538, 592, 538, 504, 640, 650, 976, 1489, 1152, 1109, 1247, 1197, 1195, 1221, 1192, 1303, 581], "backgroundColor": "#d62728", "borderColor": "#d62728", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-II", "data": [0, 0, 0, 0, 0, 32, 38, 37, 38, 69, 71, 96, 254, 143, 186, 215, 304, 517, 608, 894, 851, 782, 967, 779, 1045, 836, 370], "backgroundColor": "#e07070", "borderColor": "#e07070", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-AES", "data": [146, 126, 136, 123, 134, 125, 133, 148, 137, 133, 163, 222, 263, 214, 249, 277, 309, 359, 299, 335, 261, 425, 523, 589, 922, 1126, 446], "backgroundColor": "#9467bd", "borderColor": "#9467bd", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "JGCD", "data": [186, 175, 157, 131, 139, 174, 221, 184, 230, 204, 196, 154, 229, 195, 272, 242, 268, 308, 237, 235, 215, 189, 203, 182, 227, 231, 93], "backgroundColor": "#c5b0d5", "borderColor": "#c5b0d5", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "AST", "data": [48, 53, 60, 86, 58, 88, 88, 98, 34, 57, 102, 152, 119, 123, 195, 349, 332, 465, 573, 717, 721, 742, 657, 660, 917, 1444, 838], "backgroundColor": "#7b4d9e", "borderColor": "#7b4d9e", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-ITS", "data": [23, 26, 31, 27, 53, 48, 53, 80, 83, 95, 117, 163, 188, 185, 326, 311, 354, 385, 444, 511, 822, 1022, 1230, 1185, 1413, 1627, 414], "backgroundColor": "#8c564b", "borderColor": "#8c564b", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-VT", "data": [232, 153, 167, 162, 190, 202, 186, 378, 507, 524, 392, 467, 490, 439, 723, 793, 770, 924, 944, 1124, 1281, 1328, 1391, 1532, 1657, 1963, 757], "backgroundColor": "#c49c94", "borderColor": "#c49c94", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}, {"label": "T-IV", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 31, 68, 79, 82, 72, 240, 544, 845, 24, 20], "backgroundColor": "#5b3a29", "borderColor": "#5b3a29", "borderWidth": 2, "fill": false, "tension": 0.3, "pointRadius": 2}]};
+let chartObj = null;
+let currentMode = 'line';
+
+function buildDatasets(mode) {
+  return RAW.datasets.map(ds => ({
+    ...ds,
+    type: mode === 'bar' ? 'bar' : 'line',
+    stack: mode === 'bar' ? 'stack' : undefined,
+    fill: mode === 'bar',
+  }));
+}
+
+function initChart(mode) {
+  if (chartObj) chartObj.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  chartObj = new Chart(ctx, {
+    type: mode === 'bar' ? 'bar' : 'line',
+    data: { labels: RAW.labels, datasets: buildDatasets(mode) },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+        y: { stacked: mode === 'bar', ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+      },
+    },
+  });
+}
+
+function setMode(mode, btn) {
+  document.querySelectorAll('.chart-mode button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = mode;
+  initChart(mode);
+  syncVisibility();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.toggle-venue').forEach(c => c.checked = cb.checked);
+  syncVisibility();
+}
+
+function syncVisibility() {
+  const checked = new Set([...document.querySelectorAll('.toggle-venue:checked')].map(c => c.dataset.label));
+  chartObj.data.datasets.forEach(ds => {
+    ds.hidden = !checked.has(ds.label);
+  });
+  chartObj.update();
+}
+
+document.querySelectorAll('.toggle-venue').forEach(cb => {
+  cb.addEventListener('change', syncVisibility);
+});
+
+initChart('line');
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Atlas</title>
+<style>
+  :root { --bg:#0f1117; --surface:#1a1d27; --border:#2d3148; --text:#e2e8f0; --muted:#718096; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif;
+         display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:48px 16px; }
+  h1 { font-size:32px; font-weight:800; margin-bottom:8px; }
+  .sub { color:var(--muted); margin-bottom:48px; font-size:15px; }
+  .cards { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:48px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+          padding:24px 28px; text-decoration:none; color:var(--text); width:220px;
+          transition:border-color .15s,transform .1s; }
+  .card:hover { border-color:#4f9cf9; transform:translateY(-2px); }
+  .card-icon { font-size:28px; margin-bottom:10px; }
+  .card-title { font-weight:700; font-size:15px; margin-bottom:6px; }
+  .card-desc { color:var(--muted); font-size:13px; line-height:1.5; }
+  .categories { display:flex; flex-direction:column; gap:10px; max-width:640px; width:100%; }
+  .cat-row { display:flex; align-items:center; gap:10px; }
+  .cat-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .cat-label { font-weight:600; width:140px; font-size:14px; }
+  .journals { color:var(--muted); font-size:13px; }
+  h2 { font-size:16px; font-weight:700; margin-bottom:16px; color:var(--muted);
+       text-transform:uppercase; letter-spacing:.5px; }
+</style>
+</head>
+<body>
+<h1>📄 Paper Atlas</h1>
+<p class="sub">Mechatronics · Aerospace · Control Theory · Robotics · Vehicle</p>
+
+<div class="cards">
+  <a class="card" href="explorer.html">
+    <div class="card-icon">🔍</div>
+    <div class="card-title">Explorer</div>
+    <div class="card-desc">논문 검색, 저널/연도 필터, 인용수 정렬</div>
+  </a>
+  <a class="card" href="by_year.html">
+    <div class="card-icon">📊</div>
+    <div class="card-title">By Year</div>
+    <div class="card-desc">연도별 출판 트렌드 시각화</div>
+  </a>
+  <a class="card" href="atlas_all.xlsx">
+    <div class="card-icon">📥</div>
+    <div class="card-title">Download</div>
+    <div class="card-desc">전체 데이터 Excel 다운로드</div>
+  </a>
+</div>
+
+<h2>Coverage</h2>
+<div class="categories">
+  <div class="cat-row">
+    <div class="cat-dot" style="background:#ff7f0e"></div>
+    <div class="cat-label">Mechatronics</div>
+    <div class="journals">T-Mech · T-IE · T-II</div>
+  </div>
+  <div class="cat-row">
+    <div class="cat-dot" style="background:#9467bd"></div>
+    <div class="cat-label">Aerospace</div>
+    <div class="journals">T-AES · JGCD · AST</div>
+  </div>
+  <div class="cat-row">
+    <div class="cat-dot" style="background:#2ca02c"></div>
+    <div class="cat-label">Control Theory</div>
+    <div class="journals">T-AC · Automatica · IJRNC · NonlinDyn · JFI</div>
+  </div>
+  <div class="cat-row">
+    <div class="cat-dot" style="background:#1f77b4"></div>
+    <div class="cat-label">Robotics</div>
+    <div class="journals">T-RO · IJRR · Sci-Rob</div>
+  </div>
+  <div class="cat-row">
+    <div class="cat-dot" style="background:#8c564b"></div>
+    <div class="cat-label">Vehicle</div>
+    <div class="journals">T-ITS · T-VT · T-IV</div>
+  </div>
+</div>
+</body>
+</html>
