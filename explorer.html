@@ -401,6 +401,11 @@ function escHtml(s) {
 
 (async function() {
   const status = document.getElementById('count');
+  if (location.protocol === 'file:') {
+    status.innerHTML = '⚠️ 로컬 파일로 직접 열면 데이터를 불러올 수 없습니다.'
+      + ' <b>serve.bat</b>를 실행한 후 <a href="http://localhost:8080" style="color:var(--accent)">http://localhost:8080</a> 으로 접속하세요.';
+    return;
+  }
   status.textContent = '데이터 로딩 중…';
   try {
     const res = await fetch('papers.json');
