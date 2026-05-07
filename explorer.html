@@ -63,10 +63,14 @@
                padding: 4px 10px; font-size: 12px; cursor: pointer; }
   .kw-clear:hover { color: var(--text); border-color: var(--text); }
   .kw-label { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .home-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+               padding: 5px 12px; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .home-btn:hover { color: var(--text); border-color: var(--text); }
 </style>
 </head>
 <body>
 <header>
+  <a class="home-btn" href="index.html">← Home</a>
   <h1>📄 Paper Atlas — Explorer</h1>
   <span class="stamp">Updated 2026-05-07</span>
   <span class="stamp" style="margin-left:auto">
@@ -128,6 +132,12 @@
         <option value="all">Title + Abstract + Authors</option>
       </select>
       <button class="kw-clear" onclick="clearKeywords()">✕ Clear</button>
+    </div>
+    <!-- 저자 검색 행 -->
+    <div class="kw-row">
+      <span class="kw-label">AUTHOR</span>
+      <input class="kw-input" id="authorKw" placeholder="Author name…" style="width:260px" oninput="onAuthorInput(this)">
+      <button class="kw-clear" onclick="clearAuthor()">✕ Clear</button>
     </div>
     <!-- 기본 필터 행 -->
     <div class="search-bar">
@@ -195,6 +205,18 @@ function clearKeywords() {
   applyFilters();
 }
 
+function onAuthorInput(el) {
+  el.classList.toggle('has-value', el.value.trim() !== '');
+  applyFilters();
+}
+
+function clearAuthor() {
+  const el = document.getElementById('authorKw');
+  el.value = '';
+  el.classList.remove('has-value');
+  applyFilters();
+}
+
 function normalizeText(str) {
   return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
@@ -221,10 +243,11 @@ function toggleAll(cb) {
 
 function applyFilters() {
   if (!dataLoaded) return;
-  const kw1   = document.getElementById('kw1').value;
-  const kw2   = document.getElementById('kw2').value;
-  const kw3   = document.getElementById('kw3').value;
-  const scope = document.getElementById('kwScope').value;
+  const kw1      = document.getElementById('kw1').value;
+  const kw2      = document.getElementById('kw2').value;
+  const kw3      = document.getElementById('kw3').value;
+  const authorKw = normalizeText(document.getElementById('authorKw').value.trim());
+  const scope    = document.getElementById('kwScope').value;
   const yearFrom = parseInt(document.getElementById('yearFrom').value) || 0;
   const yearTo   = parseInt(document.getElementById('yearTo').value)   || 9999;
   const checked  = new Set([...document.querySelectorAll('.venue-cb input:checked')].map(c => c.value));
@@ -239,6 +262,9 @@ function applyFilters() {
     const title    = normalizeText(p.title || '');
     const abstract = normalizeText(p.abstract || '');
     const authors  = normalizeText(Array.isArray(p.authors) ? p.authors.join(' ') : (p.authors || ''));
+
+    // 저자 필터
+    if (authorKw && !authors.includes(authorKw)) return false;
 
     let haystack;
     if      (scope === 'title')           haystack = title;
