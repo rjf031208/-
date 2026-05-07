@@ -195,10 +195,14 @@ function clearKeywords() {
   applyFilters();
 }
 
+function normalizeText(str) {
+  return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 function kwMatch(haystack, kws, ops) {
   // kws = [kw1, kw2, kw3], ops = [op12, op23]
   // 빈 키워드 무시, 왼쪽부터 순서대로 AND/OR 적용
-  const terms = kws.map(k => k.toLowerCase().trim()).filter(k => k);
+  const terms = kws.map(k => normalizeText(k).trim()).filter(k => k);
   if (!terms.length) return true;
 
   let result = haystack.includes(terms[0]);
@@ -232,9 +236,9 @@ function applyFilters() {
     const yr = parseInt(p.year) || 0;
     if (yr < yearFrom || yr > yearTo) return false;
 
-    const title    = (p.title || '').toLowerCase();
-    const abstract = (p.abstract || '').toLowerCase();
-    const authors  = (Array.isArray(p.authors) ? p.authors.join(' ') : (p.authors || '')).toLowerCase();
+    const title    = normalizeText(p.title || '');
+    const abstract = normalizeText(p.abstract || '');
+    const authors  = normalizeText(Array.isArray(p.authors) ? p.authors.join(' ') : (p.authors || ''));
 
     let haystack;
     if      (scope === 'title')           haystack = title;
