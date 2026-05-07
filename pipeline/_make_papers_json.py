@@ -21,6 +21,29 @@ LABEL_TO_ID = {v["label"]: v["id"] for v in VENUES_CFG}
 ABSTRACT_LIMIT = 400   # 초록 최대 글자 수 (키워드 검색용)
 MAX_AUTHORS    = 5     # 저자 최대 표시 수
 
+import re
+# 제목이 이 패턴에 해당하면 비논문 항목으로 제외
+_JUNK_PATTERNS = re.compile(
+    r"^\s*$"                                    # 빈 제목
+    r"|^\d{4}\s+(Index|IEEE\b)"                 # "2004 Index", "2006 IEEE International..."
+    r"|^Index\b"                                # "Index to ..."
+    r"|^(Front\s+Matter|Back\s+Matter)"         # 표지/후면
+    r"|^Table\s+of\s+Contents"                  # 목차
+    r"|^(Errata|Erratum|Correction\s+to\b)"     # 정오표
+    r"|^(Obituary|In\s+Memoriam)\b"             # 부고
+    r"|^Masthead\b"                             # 판권면
+    r"|^Blank\s+Page",                          # 빈 페이지
+    re.IGNORECASE,
+)
+
+def is_junk(p: dict) -> bool:
+    title = (p.get("title") or "").strip()
+    if not title:
+        return True
+    if _JUNK_PATTERNS.search(title):
+        return True
+    return False
+
 
 def slim(p: dict) -> dict:
     authors_raw = p.get("authors", [])
@@ -52,6 +75,9 @@ def main():
         papers = json.load(f)
     print(f"  {len(papers):,} papers")
 
+    before = len(papers)
+    papers = [p for p in papers if not is_junk(p)]
+    print(f"  비논문 항목 제거: {before - len(papers):,}개 제외 → {len(papers):,}개 남음")
     slimmed = [slim(p) for p in papers]
 
     # 최소 분리자로 직렬화 (공백 없음)
