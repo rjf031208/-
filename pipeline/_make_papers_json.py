@@ -25,34 +25,44 @@ import re
 import html as html_mod
 
 # ── HTML 정제 ────────────────────────────────────────────────────────────
-_INLINE_FORMULA = re.compile(r'<inline-formula\b[^>]*>.*?</inline-formula>', re.IGNORECASE | re.DOTALL)
-_HTML_TAG       = re.compile(r'<[^>]+>')
-_MULTI_SPACE    = re.compile(r'\s{2,}')
+# <inline-formula> 및 <formula> 블록 제거
+_FORMULA_BLOCK = re.compile(
+    r'<(inline-formula|formula)\b[^>]*>.*?</(inline-formula|formula)>',
+    re.IGNORECASE | re.DOTALL,
+)
+_HTML_TAG    = re.compile(r'<[^>]+>')
+_MULTI_SPACE = re.compile(r'\s{2,}')
 
 def clean_title(title: str) -> str:
     if not title:
         return ''
-    # inline-formula 블록 전체 제거 (이중 인코딩된 LaTeX 포함)
-    title = _INLINE_FORMULA.sub('', title)
-    # 남은 HTML 태그 제거 (<b>, <i>, <italic> 등)
-    title = _HTML_TAG.sub('', title)
-    # HTML 엔티티 디코딩 (&lt; → <, &amp; → & 등)
+    # 1. HTML 엔티티 먼저 디코딩 (&lt;inline-formula&gt; → <inline-formula>)
     title = html_mod.unescape(title)
-    # 연속 공백 정리
+    # 2. 수식 블록 제거 (<inline-formula>, <formula>)
+    title = _FORMULA_BLOCK.sub('', title)
+    # 3. 남은 HTML 태그 제거 (<b>, <i>, <tex>, <italic> 등)
+    title = _HTML_TAG.sub('', title)
+    # 4. 한 번 더 엔티티 디코딩 (이중 인코딩 대응)
+    title = html_mod.unescape(title)
+    # 5. 연속 공백 정리
     title = _MULTI_SPACE.sub(' ', title).strip()
     return title
 
 # ── 비논문 필터 ──────────────────────────────────────────────────────────
 _JUNK_PATTERNS = re.compile(
     r"^\s*$"                                      # 빈 제목
-    r"|^\[?Blank\s+[Pp]age\]?"                    # [Blank page] / Blank Page
+    r"|^\[.*?(cover|contents|index|masthead|blank|erratum|errata)\b.*?\]$"  # [Cover page], [Back cover] 등
+    r"|^\[?Blank\s+[Pp]age\]?"                    # Blank Page
     r"|^\d{4}\s+(Index|IEEE\b)"                   # "2004 Index", "2006 IEEE International..."
     r"|^Index\b"                                  # "Index to ..."
     r"|^(Front\s+Matter|Back\s+Matter)"           # 표지/후면
+    r"|^(Front|Back|Inside)\s+(Cover|Matter)\b"   # Front Cover, Back Cover 등
+    r"|^Cover\s+(Page|Image)\b"                   # Cover Page, Cover Image
     r"|^Table\s+of\s+Contents"                    # 목차
     r"|^(Errata|Erratum|Correction\s+to\b)"       # 정오표
     r"|^(Obituary|In\s+Memoriam)\b"               # 부고
-    r"|^Masthead\b",                              # 판권면
+    r"|^Masthead\b"                               # 판권면
+    r"|^</",                                      # XML 오염 레코드 (</title> 등으로 시작)
     re.IGNORECASE,
 )
 
