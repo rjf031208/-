@@ -26,8 +26,9 @@
   main { flex: 1; overflow-y: auto; }
   table { width: 100%; border-collapse: collapse; }
   thead th { background: var(--surface); padding: 8px 12px; text-align: left; font-size: 12px;
-              color: var(--muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1; cursor: pointer; }
+              color: var(--muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1; cursor: pointer; user-select: none; }
   thead th:hover { color: var(--text); }
+  thead th.sort-active { color: var(--accent); }
   tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
   tbody tr:hover { background: var(--surface); }
   td { padding: 8px 12px; vertical-align: top; }
@@ -165,23 +166,17 @@
         <span>–</span>
         <input type="number" id="yearTo" placeholder="to" oninput="applyFilters()">
       </div>
-      <select id="sortBy" onchange="applyFilters()">
-        <option value="year_desc">Year ↓</option>
-        <option value="year_asc">Year ↑</option>
-        <option value="cite_desc">Citations ↓</option>
-        <option value="title_asc">Title ↑</option>
-      </select>
-      <span id="count"></span>
+<span id="count"></span>
     </div>
     <main>
       <table>
         <thead>
           <tr>
-            <th style="width:60px">Year</th>
+            <th id="th-year" style="width:60px" onclick="toggleSort('year')">Year</th>
             <th style="width:90px">Journal</th>
-            <th>Title</th>
+            <th id="th-title" onclick="toggleSort('title')">Title</th>
             <th style="width:200px">Authors</th>
-            <th style="width:70px" title="Citation count">Cited</th>
+            <th id="th-cite" style="width:70px" onclick="toggleSort('cite')">Cited</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -201,6 +196,29 @@ let page = 0;
 let dataLoaded = false;
 
 const OPS = { op12: 'AND', op23: 'AND' };
+let sortState = { key: 'year', dir: 'desc' };  // key: year|title|cite, dir: asc|desc
+
+function toggleSort(key) {
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    sortState.key = key;
+    sortState.dir = key === 'title' ? 'asc' : 'desc';
+  }
+  updateSortHeaders();
+  applyFilters();
+}
+
+function updateSortHeaders() {
+  const labels = { year: 'Year', title: 'Title', cite: 'Cited' };
+  ['year','title','cite'].forEach(k => {
+    const th = document.getElementById('th-' + k);
+    if (!th) return;
+    const arrow = sortState.key === k ? (sortState.dir === 'asc' ? ' ↑' : ' ↓') : '';
+    th.textContent = labels[k] + arrow;
+    th.classList.toggle('sort-active', sortState.key === k);
+  });
+}
 
 // ── 이벤트 핸들러 ──────────────────────────────────────────────────────
 
@@ -296,7 +314,6 @@ function applyFilters() {
   const yearFrom = parseInt(document.getElementById('yearFrom').value) || 0;
   const yearTo   = parseInt(document.getElementById('yearTo').value)   || 9999;
   const checked  = new Set([...document.querySelectorAll('.venue-cb input:checked')].map(c => c.value));
-  const sort     = document.getElementById('sortBy').value;
   const ops = [OPS.op12, OPS.op23];
 
   filtered = ALL_PAPERS.filter(p => {
@@ -319,10 +336,10 @@ function applyFilters() {
     return true;
   });
 
-  if      (sort === 'year_desc') filtered.sort((a,b) => (b.year||0)-(a.year||0));
-  else if (sort === 'year_asc')  filtered.sort((a,b) => (a.year||0)-(b.year||0));
-  else if (sort === 'cite_desc') filtered.sort((a,b) => (b.citation_count||0)-(a.citation_count||0));
-  else if (sort === 'title_asc') filtered.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+  const d = sortState.dir === 'asc' ? 1 : -1;
+  if      (sortState.key === 'year')  filtered.sort((a,b) => d * ((a.year||0)-(b.year||0)));
+  else if (sortState.key === 'title') filtered.sort((a,b) => d * (a.title||'').localeCompare(b.title||''));
+  else if (sortState.key === 'cite')  filtered.sort((a,b) => d * ((a.citation_count||0)-(b.citation_count||0)));
 
   document.getElementById('count').textContent = filtered.length.toLocaleString() + ' papers';
   page = 0;
@@ -400,6 +417,7 @@ function escHtml(s) {
       abstract:       p.ab || '',
     }));
     dataLoaded = true;
+    updateSortHeaders();
     applyFilters();
   } catch(e) {
     status.textContent = '⚠️ 데이터 로드 실패: ' + e.message;
