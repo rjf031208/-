@@ -56,11 +56,20 @@ _JUNK_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+# NICT/JST 기계번역 레코드 감지 (제목 끝에 붙는 태그)
+_MACHINE_TRANS = re.compile(
+    r"【Powered\s+by\s+NICT】"
+    r"|【JST[・･]京大機械翻訳】"
+    r"|【機械翻訳】",
+)
+
 def is_junk(p: dict) -> bool:
     title = clean_title(p.get("title") or "")
     if not title:
         return True
     if _JUNK_PATTERNS.search(title):
+        return True
+    if _MACHINE_TRANS.search(title):
         return True
     return False
 
