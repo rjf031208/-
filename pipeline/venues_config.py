@@ -53,6 +53,18 @@ OPENALEX_VENUES = [
         "years":  range(1993, 2027),
     },
     {
+        "key":    "cep",
+        "label":  "CEP",
+        "issn_l": "0967-0661",   # Control Engineering Practice (IFAC/Elsevier)
+        "years":  range(1993, 2027),
+    },
+    {
+        "key":    "jas",
+        "label":  "JAS",
+        "issn_l": "2329-9266",   # IEEE/CAA Journal of Automatica Sinica
+        "years":  range(2014, 2027),
+    },
+    {
         "key":    "tac",
         "label":  "T-AC",
         "issn_l": "0018-9286",   # IEEE Transactions on Automatic Control
@@ -84,6 +96,12 @@ OPENALEX_VENUES = [
     },
 
     # ── Mechatronics ──────────────────────────────────────────────────────────
+    {
+        "key":    "mechatronics",
+        "label":  "Mechatronics",
+        "issn_l": "0957-4158",   # Mechatronics (Elsevier/IFAC)
+        "years":  range(1991, 2027),
+    },
     {
         "key":    "tmech",
         "label":  "T-Mech",
@@ -126,6 +144,14 @@ OPENALEX_VENUES = [
         "key":    "ast",
         "label":  "AST",
         "issn_l": "1270-9638",   # Aerospace Science and Technology
+        "years":  range(2000, 2027),
+    },
+
+    # ── AI & Systems ─────────────────────────────────────────────────────────
+    {
+        "key":    "eswa",
+        "label":  "ESWA",
+        "issn_l": "0957-4174",   # Expert Systems with Applications (Elsevier)
         "years":  range(2000, 2027),
     },
 
@@ -178,14 +204,20 @@ VENUES_CFG = [
     {"label": "T-CST",      "id": "tcst",       "color": "#1a7a1a", "since": 1993, "category": "Control Theory"},
     {"label": "T-AC",       "id": "tac",        "color": "#2ca02c", "since": 1990, "category": "Control Theory"},
     {"label": "Automatica", "id": "automatica", "color": "#52be52", "since": 1990, "category": "Control Theory"},
+    {"label": "CEP",        "id": "cep",        "color": "#27ae60", "since": 1993, "category": "Control Theory"},
+    {"label": "JAS",        "id": "jas",        "color": "#16a085", "since": 2014, "category": "Control Theory"},
     {"label": "IJRNC",      "id": "ijrnc",      "color": "#98df8a", "since": 2000, "category": "Control Theory"},
     {"label": "NonlinDyn",  "id": "nonlindyn",  "color": "#3d8c3d", "since": 2000, "category": "Control Theory"},
     {"label": "JFI",        "id": "jfi",        "color": "#74c476", "since": 2000, "category": "Control Theory"},
 
     # ── Mechatronics (주황/빨강 계열) ─────────────────────────────────────────
+    {"label": "Mechatronics","id": "mechatronics","color": "#e67e22","since": 1991, "category": "Mechatronics"},
     {"label": "T-Mech",     "id": "tmech",      "color": "#ff7f0e", "since": 1996, "category": "Mechatronics"},
     {"label": "T-IE",       "id": "tie",        "color": "#d62728", "since": 2000, "category": "Mechatronics"},
     {"label": "T-II",       "id": "tii",        "color": "#e07070", "since": 2005, "category": "Mechatronics"},
+
+    # ── AI & Systems (노란/황금 계열) ─────────────────────────────────────────
+    {"label": "ESWA",       "id": "eswa",       "color": "#f39c12", "since": 2000, "category": "AI & Systems"},
 
     # ── Aerospace (보라 계열) ─────────────────────────────────────────────────
     {"label": "J.Aircraft", "id": "jaircraft",  "color": "#6a1b9a", "since": 2000, "category": "Aerospace"},
@@ -213,4 +245,5 @@ CATEGORY_COLORS = {
     "Aerospace":      "#9467bd",
     "UAV":            "#e74c3c",
     "Vehicle":        "#8c564b",
+    "AI & Systems":   "#f39c12",
 }

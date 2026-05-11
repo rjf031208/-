@@ -18,7 +18,7 @@ IN_FILE  = Path(__file__).parent / "all_enriched.json"
 OUT_FILE = Path(__file__).parent.parent / "papers.json"
 
 LABEL_TO_ID = {v["label"]: v["id"] for v in VENUES_CFG}
-ABSTRACT_LIMIT = 400   # 초록 최대 글자 수 (키워드 검색용)
+ABSTRACT_LIMIT = 300   # 초록 최대 글자 수 (키워드 검색용)
 MAX_AUTHORS    = 5     # 저자 최대 표시 수
 
 import re

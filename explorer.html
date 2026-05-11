@@ -87,7 +87,7 @@
   <h1>📄 Paper Search — Explorer</h1>
   <span class="stamp">Updated 2026-05-07</span>
   <span class="stamp" style="margin-left:auto">
-    176,034 papers · 23 journals
+    218,959 papers · 27 journals
   </span>
 </header>
 <div class="layout">
@@ -107,14 +107,20 @@
 <label class="venue-cb"><input type="checkbox" value="tcst" checked onchange="applyFilters()"><span class="dot" style="background:#1a7a1a"></span>T-CST</label>
 <label class="venue-cb"><input type="checkbox" value="tac" checked onchange="applyFilters()"><span class="dot" style="background:#2ca02c"></span>T-AC</label>
 <label class="venue-cb"><input type="checkbox" value="automatica" checked onchange="applyFilters()"><span class="dot" style="background:#52be52"></span>Automatica</label>
+<label class="venue-cb"><input type="checkbox" value="cep" checked onchange="applyFilters()"><span class="dot" style="background:#27ae60"></span>CEP</label>
+<label class="venue-cb"><input type="checkbox" value="jas" checked onchange="applyFilters()"><span class="dot" style="background:#16a085"></span>JAS</label>
 <label class="venue-cb"><input type="checkbox" value="ijrnc" checked onchange="applyFilters()"><span class="dot" style="background:#98df8a"></span>IJRNC</label>
 <label class="venue-cb"><input type="checkbox" value="nonlindyn" checked onchange="applyFilters()"><span class="dot" style="background:#3d8c3d"></span>NonlinDyn</label>
 <label class="venue-cb"><input type="checkbox" value="jfi" checked onchange="applyFilters()"><span class="dot" style="background:#74c476"></span>JFI</label>
 </div>
 <div class="venue-group"><span class="group-label" style="color:#ff7f0e">Mechatronics</span>
+<label class="venue-cb"><input type="checkbox" value="mechatronics" checked onchange="applyFilters()"><span class="dot" style="background:#e67e22"></span>Mechatronics</label>
 <label class="venue-cb"><input type="checkbox" value="tmech" checked onchange="applyFilters()"><span class="dot" style="background:#ff7f0e"></span>T-Mech</label>
 <label class="venue-cb"><input type="checkbox" value="tie" checked onchange="applyFilters()"><span class="dot" style="background:#d62728"></span>T-IE</label>
 <label class="venue-cb"><input type="checkbox" value="tii" checked onchange="applyFilters()"><span class="dot" style="background:#e07070"></span>T-II</label>
+</div>
+<div class="venue-group"><span class="group-label" style="color:#f39c12">AI &amp; Systems</span>
+<label class="venue-cb"><input type="checkbox" value="eswa" checked onchange="applyFilters()"><span class="dot" style="background:#f39c12"></span>ESWA</label>
 </div>
 <div class="venue-group"><span class="group-label" style="color:#9467bd">Aerospace</span>
 <label class="venue-cb"><input type="checkbox" value="jaircraft" checked onchange="applyFilters()"><span class="dot" style="background:#6a1b9a"></span>J.Aircraft</label>
@@ -196,7 +202,7 @@
   </div>
 </div>
 <script>
-const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","ral":"#0a5fa8","jirs":"#6baed6","tcst":"#1a7a1a","tac":"#2ca02c","automatica":"#52be52","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","jaircraft":"#6a1b9a","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","unmanned":"#e74c3c","drones":"#c0392b","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
+const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","ral":"#0a5fa8","jirs":"#6baed6","tcst":"#1a7a1a","tac":"#2ca02c","automatica":"#52be52","cep":"#27ae60","jas":"#16a085","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","mechatronics":"#e67e22","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","eswa":"#f39c12","jaircraft":"#6a1b9a","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","unmanned":"#e74c3c","drones":"#c0392b","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
 let ALL_PAPERS = [];
 const PAGE_SIZE = 20;
 let filtered = [];
