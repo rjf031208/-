@@ -87,7 +87,7 @@
   <h1>📄 Paper Search — Explorer</h1>
   <span class="stamp">Updated 2026-05-07</span>
   <span class="stamp" style="margin-left:auto">
-    147,875 papers · 17 journals
+    176,034 papers · 23 journals
   </span>
 </header>
 <div class="layout">
@@ -100,8 +100,11 @@
 <label class="venue-cb"><input type="checkbox" value="tro" checked onchange="applyFilters()"><span class="dot" style="background:#1f77b4"></span>T-RO</label>
 <label class="venue-cb"><input type="checkbox" value="ijrr" checked onchange="applyFilters()"><span class="dot" style="background:#4c9fda"></span>IJRR</label>
 <label class="venue-cb"><input type="checkbox" value="scirob" checked onchange="applyFilters()"><span class="dot" style="background:#17becf"></span>Sci-Rob</label>
+<label class="venue-cb"><input type="checkbox" value="ral" checked onchange="applyFilters()"><span class="dot" style="background:#0a5fa8"></span>RAL</label>
+<label class="venue-cb"><input type="checkbox" value="jirs" checked onchange="applyFilters()"><span class="dot" style="background:#6baed6"></span>JIRS</label>
 </div>
 <div class="venue-group"><span class="group-label" style="color:#2ca02c">Control Theory</span>
+<label class="venue-cb"><input type="checkbox" value="tcst" checked onchange="applyFilters()"><span class="dot" style="background:#1a7a1a"></span>T-CST</label>
 <label class="venue-cb"><input type="checkbox" value="tac" checked onchange="applyFilters()"><span class="dot" style="background:#2ca02c"></span>T-AC</label>
 <label class="venue-cb"><input type="checkbox" value="automatica" checked onchange="applyFilters()"><span class="dot" style="background:#52be52"></span>Automatica</label>
 <label class="venue-cb"><input type="checkbox" value="ijrnc" checked onchange="applyFilters()"><span class="dot" style="background:#98df8a"></span>IJRNC</label>
@@ -114,9 +117,14 @@
 <label class="venue-cb"><input type="checkbox" value="tii" checked onchange="applyFilters()"><span class="dot" style="background:#e07070"></span>T-II</label>
 </div>
 <div class="venue-group"><span class="group-label" style="color:#9467bd">Aerospace</span>
+<label class="venue-cb"><input type="checkbox" value="jaircraft" checked onchange="applyFilters()"><span class="dot" style="background:#6a1b9a"></span>J.Aircraft</label>
 <label class="venue-cb"><input type="checkbox" value="taes" checked onchange="applyFilters()"><span class="dot" style="background:#9467bd"></span>T-AES</label>
 <label class="venue-cb"><input type="checkbox" value="jgcd" checked onchange="applyFilters()"><span class="dot" style="background:#c5b0d5"></span>JGCD</label>
 <label class="venue-cb"><input type="checkbox" value="ast" checked onchange="applyFilters()"><span class="dot" style="background:#7b4d9e"></span>AST</label>
+</div>
+<div class="venue-group"><span class="group-label" style="color:#e74c3c">UAV</span>
+<label class="venue-cb"><input type="checkbox" value="unmanned" checked onchange="applyFilters()"><span class="dot" style="background:#e74c3c"></span>UnmannedSys</label>
+<label class="venue-cb"><input type="checkbox" value="drones" checked onchange="applyFilters()"><span class="dot" style="background:#c0392b"></span>Drones</label>
 </div>
 <div class="venue-group"><span class="group-label" style="color:#8c564b">Vehicle</span>
 <label class="venue-cb"><input type="checkbox" value="tits" checked onchange="applyFilters()"><span class="dot" style="background:#8c564b"></span>T-ITS</label>
@@ -188,7 +196,7 @@
   </div>
 </div>
 <script>
-const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","tac":"#2ca02c","automatica":"#52be52","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
+const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","ral":"#0a5fa8","jirs":"#6baed6","tcst":"#1a7a1a","tac":"#2ca02c","automatica":"#52be52","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","jaircraft":"#6a1b9a","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","unmanned":"#e74c3c","drones":"#c0392b","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
 let ALL_PAPERS = [];
 const PAGE_SIZE = 20;
 let filtered = [];

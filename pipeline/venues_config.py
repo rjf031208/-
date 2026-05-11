@@ -32,8 +32,26 @@ OPENALEX_VENUES = [
         "issn_l": "2470-9476",   # Science Robotics
         "years":  range(2016, 2027),
     },
+    {
+        "key":    "ral",
+        "label":  "RAL",
+        "issn_l": "2377-3766",   # IEEE Robotics and Automation Letters
+        "years":  range(2016, 2027),
+    },
+    {
+        "key":    "jirs",
+        "label":  "JIRS",
+        "issn_l": "0921-0296",   # Journal of Intelligent & Robotic Systems
+        "years":  range(2000, 2027),
+    },
 
     # ── Control Theory ────────────────────────────────────────────────────────
+    {
+        "key":    "tcst",
+        "label":  "T-CST",
+        "issn_l": "1063-6536",   # IEEE Transactions on Control Systems Technology
+        "years":  range(1993, 2027),
+    },
     {
         "key":    "tac",
         "label":  "T-AC",
@@ -87,6 +105,12 @@ OPENALEX_VENUES = [
 
     # ── Aerospace ─────────────────────────────────────────────────────────────
     {
+        "key":    "jaircraft",
+        "label":  "J.Aircraft",
+        "issn_l": "0021-8669",   # Journal of Aircraft (AIAA)
+        "years":  range(2000, 2027),
+    },
+    {
         "key":    "taes",
         "label":  "T-AES",
         "issn_l": "0018-9251",   # IEEE Transactions on Aerospace and Electronic Systems
@@ -103,6 +127,20 @@ OPENALEX_VENUES = [
         "label":  "AST",
         "issn_l": "1270-9638",   # Aerospace Science and Technology
         "years":  range(2000, 2027),
+    },
+
+    # ── UAV ──────────────────────────────────────────────────────────────────
+    {
+        "key":    "unmanned",
+        "label":  "UnmannedSys",
+        "issn_l": "2301-3850",   # Unmanned Systems (World Scientific)
+        "years":  range(2013, 2027),
+    },
+    {
+        "key":    "drones",
+        "label":  "Drones",
+        "issn_l": "2504-446X",   # Drones (MDPI)
+        "years":  range(2017, 2027),
     },
 
     # ── Vehicle / Transportation ──────────────────────────────────────────────
@@ -130,31 +168,39 @@ OPENALEX_VENUES = [
 # 카테고리별 색상 그룹으로 구성
 VENUES_CFG = [
     # ── Robotics (파란 계열) ──────────────────────────────────────────────────
-    {"label": "T-RO",      "id": "tro",       "color": "#1f77b4", "since": 2004, "category": "Robotics"},
-    {"label": "IJRR",      "id": "ijrr",      "color": "#4c9fda", "since": 1982, "category": "Robotics"},
-    {"label": "Sci-Rob",   "id": "scirob",    "color": "#17becf", "since": 2016, "category": "Robotics"},
+    {"label": "T-RO",       "id": "tro",        "color": "#1f77b4", "since": 2004, "category": "Robotics"},
+    {"label": "IJRR",       "id": "ijrr",       "color": "#4c9fda", "since": 1982, "category": "Robotics"},
+    {"label": "Sci-Rob",    "id": "scirob",     "color": "#17becf", "since": 2016, "category": "Robotics"},
+    {"label": "RAL",        "id": "ral",        "color": "#0a5fa8", "since": 2016, "category": "Robotics"},
+    {"label": "JIRS",       "id": "jirs",       "color": "#6baed6", "since": 1990, "category": "Robotics"},
 
     # ── Control Theory (초록 계열) ────────────────────────────────────────────
-    {"label": "T-AC",      "id": "tac",       "color": "#2ca02c", "since": 1990, "category": "Control Theory"},
-    {"label": "Automatica","id": "automatica","color": "#52be52", "since": 1990, "category": "Control Theory"},
-    {"label": "IJRNC",     "id": "ijrnc",     "color": "#98df8a", "since": 2000, "category": "Control Theory"},
-    {"label": "NonlinDyn", "id": "nonlindyn", "color": "#3d8c3d", "since": 2000, "category": "Control Theory"},
-    {"label": "JFI",       "id": "jfi",       "color": "#74c476", "since": 2000, "category": "Control Theory"},
+    {"label": "T-CST",      "id": "tcst",       "color": "#1a7a1a", "since": 1993, "category": "Control Theory"},
+    {"label": "T-AC",       "id": "tac",        "color": "#2ca02c", "since": 1990, "category": "Control Theory"},
+    {"label": "Automatica", "id": "automatica", "color": "#52be52", "since": 1990, "category": "Control Theory"},
+    {"label": "IJRNC",      "id": "ijrnc",      "color": "#98df8a", "since": 2000, "category": "Control Theory"},
+    {"label": "NonlinDyn",  "id": "nonlindyn",  "color": "#3d8c3d", "since": 2000, "category": "Control Theory"},
+    {"label": "JFI",        "id": "jfi",        "color": "#74c476", "since": 2000, "category": "Control Theory"},
 
     # ── Mechatronics (주황/빨강 계열) ─────────────────────────────────────────
-    {"label": "T-Mech",    "id": "tmech",     "color": "#ff7f0e", "since": 1996, "category": "Mechatronics"},
-    {"label": "T-IE",      "id": "tie",       "color": "#d62728", "since": 2000, "category": "Mechatronics"},
-    {"label": "T-II",      "id": "tii",       "color": "#e07070", "since": 2005, "category": "Mechatronics"},
+    {"label": "T-Mech",     "id": "tmech",      "color": "#ff7f0e", "since": 1996, "category": "Mechatronics"},
+    {"label": "T-IE",       "id": "tie",        "color": "#d62728", "since": 2000, "category": "Mechatronics"},
+    {"label": "T-II",       "id": "tii",        "color": "#e07070", "since": 2005, "category": "Mechatronics"},
 
     # ── Aerospace (보라 계열) ─────────────────────────────────────────────────
-    {"label": "T-AES",     "id": "taes",      "color": "#9467bd", "since": 1990, "category": "Aerospace"},
-    {"label": "JGCD",      "id": "jgcd",      "color": "#c5b0d5", "since": 2000, "category": "Aerospace"},
-    {"label": "AST",       "id": "ast",       "color": "#7b4d9e", "since": 2000, "category": "Aerospace"},
+    {"label": "J.Aircraft", "id": "jaircraft",  "color": "#6a1b9a", "since": 2000, "category": "Aerospace"},
+    {"label": "T-AES",      "id": "taes",       "color": "#9467bd", "since": 1990, "category": "Aerospace"},
+    {"label": "JGCD",       "id": "jgcd",       "color": "#c5b0d5", "since": 2000, "category": "Aerospace"},
+    {"label": "AST",        "id": "ast",        "color": "#7b4d9e", "since": 2000, "category": "Aerospace"},
+
+    # ── UAV (빨강 계열) ───────────────────────────────────────────────────────
+    {"label": "UnmannedSys","id": "unmanned",   "color": "#e74c3c", "since": 2013, "category": "UAV"},
+    {"label": "Drones",     "id": "drones",     "color": "#c0392b", "since": 2017, "category": "UAV"},
 
     # ── Vehicle / Transportation (갈색/회색 계열) ─────────────────────────────
-    {"label": "T-ITS",     "id": "tits",      "color": "#8c564b", "since": 2000, "category": "Vehicle"},
-    {"label": "T-VT",      "id": "tvt",       "color": "#c49c94", "since": 2000, "category": "Vehicle"},
-    {"label": "T-IV",      "id": "tiv",       "color": "#5b3a29", "since": 2016, "category": "Vehicle"},
+    {"label": "T-ITS",      "id": "tits",       "color": "#8c564b", "since": 2000, "category": "Vehicle"},
+    {"label": "T-VT",       "id": "tvt",        "color": "#c49c94", "since": 2000, "category": "Vehicle"},
+    {"label": "T-IV",       "id": "tiv",        "color": "#5b3a29", "since": 2016, "category": "Vehicle"},
 ]
 
 # deduplication 우선순위: 앞쪽 저널이 더 높은 우선순위
@@ -165,5 +211,6 @@ CATEGORY_COLORS = {
     "Control Theory": "#2ca02c",
     "Mechatronics":   "#ff7f0e",
     "Aerospace":      "#9467bd",
+    "UAV":            "#e74c3c",
     "Vehicle":        "#8c564b",
 }
