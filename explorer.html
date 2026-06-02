@@ -120,9 +120,9 @@
 <header>
   <a class="home-btn" href="index.html">← Home</a>
   <h1>📄 Paper Search — Explorer</h1>
-  <span class="stamp">Updated 2026-05-18</span>
+  <span class="stamp">Updated 2026-06-02</span>
   <span class="stamp" style="margin-left:auto">
-    219,726 papers · 27 journals
+    220,839 papers · 27 journals
   </span>
 </header>
 <div class="layout">
@@ -244,11 +244,15 @@
           <button class="tool-btn" onclick="hideAnalytics()">✕ 닫기</button>
         </div>
         <div class="an-block">
-          <h3>1. 저널 분포 — 현재 결과가 어느 저널에 모여 있는가</h3>
+          <h3>1. 연도별 출판 추세 — 이 주제가 언제 떴는가 (저널별 누적)</h3>
+          <div class="chart-wrap" style="height:320px"><canvas id="yearChart"></canvas></div>
+        </div>
+        <div class="an-block">
+          <h3>2. 저널 분포 — 현재 결과가 어느 저널에 모여 있는가</h3>
           <div class="chart-wrap"><canvas id="venueChart"></canvas></div>
         </div>
         <div class="an-block">
-          <h3>2. 핵심 키워드 — 제목에 어떤 주제어가 자주 등장하는가</h3>
+          <h3>3. 핵심 키워드 — 제목에 어떤 주제어가 자주 등장하는가</h3>
           <div class="kw-grid">
             <div class="chart-wrap"><canvas id="kwChart"></canvas></div>
             <div>
@@ -258,7 +262,7 @@
           </div>
         </div>
         <div class="an-block">
-          <h3>3. 최다 인용 논문 Top 20 — 반드시 봐야 할 핵심 논문</h3>
+          <h3>4. 최다 인용 논문 Top 20 — 반드시 봐야 할 핵심 논문</h3>
           <ol class="cited-list" id="topCited"></ol>
         </div>
       </section>
@@ -516,7 +520,7 @@ function exportExcel() {
 
 // ── 데이터 분석 ──────────────────────────────────────────────────────────
 
-let _charts = { venue: null, kw: null };
+let _charts = { year: null, venue: null, kw: null };
 
 const STOPWORDS = new Set(([
   'the','a','an','of','for','and','or','to','in','on','with','via','using','use','used',
@@ -568,18 +572,72 @@ function hideAnalytics() {
   analyticsVisible = false;
   document.getElementById('analytics-inline').style.display = 'none';
   document.getElementById('analyticsBtn').textContent = '📊 데이터 분석';
+  if (_charts.year)  { _charts.year.destroy();  _charts.year = null; }
   if (_charts.venue) { _charts.venue.destroy(); _charts.venue = null; }
   if (_charts.kw)    { _charts.kw.destroy();    _charts.kw = null; }
 }
 
-// 검색 결과 기준으로 3종 분석 렌더 (검색할 때마다 갱신)
+// 검색 결과 기준으로 4종 분석 렌더 (검색할 때마다 갱신)
 function renderAnalytics() {
   if (!analyticsVisible || !filtered.length) return;
   document.getElementById('an-count').textContent =
     ' · ' + filtered.length.toLocaleString() + '편 대상';
+  renderYearChart();
   renderVenueChart();
   renderKeywordChart();
   renderTopCited();
+}
+
+function renderYearChart() {
+  // year → venue_id → count
+  const byYear = new Map();
+  const venuesSeen = new Map();   // venue_id → label
+  let minY = 9999, maxY = 0;
+  for (const p of filtered) {
+    const y = parseInt(p.year) || 0;
+    if (y < 1990 || y > 2100) continue;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    const id = p.venue_id || 'etc';
+    venuesSeen.set(id, p.venue || id);
+    let row = byYear.get(y);
+    if (!row) { row = new Map(); byYear.set(y, row); }
+    row.set(id, (row.get(id) || 0) + 1);
+  }
+  if (maxY < minY) { if (_charts.year) { _charts.year.destroy(); _charts.year = null; } return; }
+
+  const years = [];
+  for (let y = minY; y <= maxY; y++) years.push(y);
+
+  // 총량 많은 저널 순으로 정렬해 색상 일관성
+  const venueTotals = new Map();
+  for (const [, row] of byYear) for (const [id, c] of row) venueTotals.set(id, (venueTotals.get(id)||0)+c);
+  const venueIds = [...venuesSeen.keys()].sort((a,b) => (venueTotals.get(b)||0)-(venueTotals.get(a)||0));
+
+  const datasets = venueIds.map(id => ({
+    label: venuesSeen.get(id),
+    data: years.map(y => (byYear.get(y)?.get(id)) || 0),
+    backgroundColor: VENUE_COLORS[id] || '#888',
+    borderWidth: 0,
+  }));
+
+  if (_charts.year) _charts.year.destroy();
+  _charts.year = new Chart(document.getElementById('yearChart'), {
+    type: 'bar',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom',
+                  labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 10 } } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#718096' }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: '#718096' }, grid: { color: '#2d3148' } }
+      }
+    }
+  });
 }
 
 function renderVenueChart() {
