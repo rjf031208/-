@@ -6,6 +6,8 @@
 <title>Paper Search — Explorer</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #0f1117; --surface: #1a1d27; --border: #2d3148;
@@ -79,6 +81,46 @@
   #loadMoreBtn:hover { border-color: var(--accent); color: var(--accent); }
   /* KaTeX inline sizing */
   .katex { font-size: 1em; }
+  /* toolbar buttons */
+  .tool-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+               color: var(--text); padding: 5px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn:disabled { opacity: .5; cursor: progress; }
+  /* analytics overlay */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
+              display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .overlay-box { background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+                  width: min(1100px, 96vw); max-height: 92vh; display: flex; flex-direction: column; }
+  .overlay-head { display: flex; align-items: center; justify-content: space-between;
+                   padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .overlay-head h2 { font-size: 17px; font-weight: 700; }
+  .overlay-head .muted { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  .close-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+                width: 30px; height: 30px; cursor: pointer; font-size: 14px; }
+  .close-btn:hover { color: var(--text); border-color: var(--text); }
+  .overlay-body { overflow-y: auto; padding: 20px 24px; }
+  .overlay-body section { margin-bottom: 32px; }
+  .overlay-body h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+  .chart-wrap { position: relative; }
+  .kw-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+  .bigram-list { list-style: none; }
+  .bigram-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px;
+                     padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .bigram-list .term { color: var(--text); }
+  .bigram-list .freq { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bigram-title { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase;
+                   letter-spacing: .5px; margin-bottom: 8px; }
+  .cited-list { list-style: none; counter-reset: cited; }
+  .cited-list li { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .cited-list li::before { counter-increment: cited; content: counter(cited); color: var(--muted);
+                            font-weight: 700; min-width: 22px; text-align: right; font-size: 13px; }
+  .cited-cite { color: #f6c90e; font-weight: 700; min-width: 56px; text-align: right;
+                 font-variant-numeric: tabular-nums; font-size: 13px; }
+  .cited-main { flex: 1; }
+  .cited-main a { color: var(--accent); text-decoration: none; font-weight: 500; font-size: 13px; }
+  .cited-main a:hover { text-decoration: underline; }
+  .cited-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  @media (max-width: 760px) { .kw-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -180,7 +222,11 @@
         <span>–</span>
         <input type="number" id="yearTo" placeholder="to" oninput="applyFilters()">
       </div>
-<span id="count"></span>
+      <span id="count"></span>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="tool-btn" id="excelBtn" onclick="exportExcel()">📥 Excel</button>
+        <button class="tool-btn" onclick="openAnalytics()">📊 데이터 분석</button>
+      </div>
     </div>
     <main>
       <table>
@@ -201,8 +247,39 @@
     </main>
   </div>
 </div>
+
+<!-- 데이터 분석 오버레이 -->
+<div id="analytics-overlay" class="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="overlay-head">
+      <h2>📊 데이터 분석<span class="muted" id="an-count"></span></h2>
+      <button class="close-btn" onclick="closeAnalytics()" title="닫기">✕</button>
+    </div>
+    <div class="overlay-body">
+      <section>
+        <h3>1. 저널 분포 — 현재 결과가 어느 저널에 모여 있는가</h3>
+        <div class="chart-wrap"><canvas id="venueChart"></canvas></div>
+      </section>
+      <section>
+        <h3>2. 핵심 키워드 — 제목에 어떤 주제어가 자주 등장하는가</h3>
+        <div class="kw-grid">
+          <div class="chart-wrap"><canvas id="kwChart"></canvas></div>
+          <div>
+            <div class="bigram-title">자주 함께 쓰인 표현 (2-gram)</div>
+            <ul class="bigram-list" id="bigramList"></ul>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h3>3. 최다 인용 논문 Top 20 — 반드시 봐야 할 핵심 논문</h3>
+        <ol class="cited-list" id="topCited"></ol>
+      </section>
+    </div>
+  </div>
+</div>
+
 <script>
-const VENUE_COLORS = {"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","ral":"#0a5fa8","jirs":"#6baed6","tcst":"#1a7a1a","tac":"#2ca02c","automatica":"#52be52","cep":"#27ae60","jas":"#16a085","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","mechatronics":"#e67e22","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","eswa":"#f39c12","jaircraft":"#6a1b9a","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","unmanned":"#e74c3c","drones":"#c0392b","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
+const VENUE_COLORS ={"tro":"#1f77b4","ijrr":"#4c9fda","scirob":"#17becf","ral":"#0a5fa8","jirs":"#6baed6","tcst":"#1a7a1a","tac":"#2ca02c","automatica":"#52be52","cep":"#27ae60","jas":"#16a085","ijrnc":"#98df8a","nonlindyn":"#3d8c3d","jfi":"#74c476","mechatronics":"#e67e22","tmech":"#ff7f0e","tie":"#d62728","tii":"#e07070","eswa":"#f39c12","jaircraft":"#6a1b9a","taes":"#9467bd","jgcd":"#c5b0d5","ast":"#7b4d9e","unmanned":"#e74c3c","drones":"#c0392b","tits":"#8c564b","tvt":"#c49c94","tiv":"#5b3a29"};
 let ALL_PAPERS = [];
 const PAGE_SIZE = 20;
 let filtered = [];
@@ -411,6 +488,200 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Excel 내보내기 (현재 필터 결과) ──────────────────────────────────────
+
+function exportExcel() {
+  if (!filtered.length) { alert('내보낼 데이터가 없습니다.'); return; }
+  const btn = document.getElementById('excelBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 생성 중…';
+  // UI 갱신 후 무거운 작업 실행
+  setTimeout(() => {
+    try {
+      const rows = filtered.map(p => ({
+        Year:      p.year || '',
+        Journal:   p.venue || '',
+        Title:     p.title || '',
+        Authors:   Array.isArray(p.authors) ? p.authors.join('; ') : (p.authors || ''),
+        DOI:       p.doi ? ('https://doi.org/' + p.doi) : '',
+        Citations: p.citation_count || 0,
+        Abstract:  p.abstract || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{wch:6},{wch:12},{wch:60},{wch:30},{wch:32},{wch:9},{wch:80}];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Papers');
+      const stamp = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `paper_search_${filtered.length}_${stamp}.xlsx`);
+    } catch (e) {
+      alert('엑셀 생성 실패: ' + e.message);
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  }, 50);
+}
+
+// ── 데이터 분석 ──────────────────────────────────────────────────────────
+
+let _charts = { venue: null, kw: null };
+
+const STOPWORDS = new Set(([
+  'the','a','an','of','for','and','or','to','in','on','with','via','using','use','used',
+  'based','from','by','at','as','is','are','be','this','that','these','those','its','it',
+  'we','our','can','new','novel','approach','approaches','method','methods','study',
+  'analysis','toward','towards','under','over','into','between','their','they','than',
+  'when','which','while','also','such','some','non','vol','no','pp','part','case','cases',
+  'paper','results','result','two','three','one','high','low','large','small','more','most',
+  'about','through','within','without','during','each','both','all','its','has','have'
+]));
+
+function tokenizeTitle(title) {
+  return (title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function isContentWord(w) {
+  return w.length >= 3 && !STOPWORDS.has(w) && !/^\d+$/.test(w) && !/^-+$/.test(w);
+}
+
+function topN(map, n) {
+  return [...map.entries()].sort((a,b) => b[1]-a[1]).slice(0, n);
+}
+
+function openAnalytics() {
+  if (!dataLoaded) return;
+  if (!filtered.length) { alert('분석할 데이터가 없습니다. 검색 조건을 확인하세요.'); return; }
+  document.getElementById('an-count').textContent =
+    ' · ' + filtered.length.toLocaleString() + '편 대상';
+  document.getElementById('analytics-overlay').style.display = 'flex';
+  // 렌더링은 오버레이가 보인 뒤 실행 (canvas 크기 확보)
+  requestAnimationFrame(() => {
+    renderVenueChart();
+    renderKeywordChart();
+    renderTopCited();
+  });
+}
+
+function closeAnalytics() {
+  document.getElementById('analytics-overlay').style.display = 'none';
+  if (_charts.venue) { _charts.venue.destroy(); _charts.venue = null; }
+  if (_charts.kw)    { _charts.kw.destroy();    _charts.kw = null; }
+}
+
+function renderVenueChart() {
+  const counts = new Map();   // venue_id → {label, count}
+  for (const p of filtered) {
+    const id = p.venue_id || 'etc';
+    const e = counts.get(id) || { label: p.venue || id, count: 0 };
+    e.count++; counts.set(id, e);
+  }
+  const sorted = [...counts.entries()].sort((a,b) => b[1].count - a[1].count);
+  const labels = sorted.map(([,e]) => e.label);
+  const data   = sorted.map(([,e]) => e.count);
+  const colors = sorted.map(([id]) => VENUE_COLORS[id] || '#888');
+  const total  = filtered.length;
+
+  const wrap = document.querySelector('#venueChart').parentElement;
+  wrap.style.height = Math.max(160, sorted.length * 26 + 40) + 'px';
+
+  if (_charts.venue) _charts.venue.destroy();
+  _charts.venue = new Chart(document.getElementById('venueChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => `${c.raw.toLocaleString()}편 (${(c.raw/total*100).toFixed(1)}%)` } }
+      },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+        y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderKeywordChart() {
+  const uni = new Map(), bi = new Map();
+  for (const p of filtered) {
+    const words = tokenizeTitle(p.title);
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      if (isContentWord(w)) uni.set(w, (uni.get(w)||0) + 1);
+      if (i + 1 < words.length) {
+        const w2 = words[i+1];
+        if (isContentWord(w) && isContentWord(w2)) {
+          const bg = w + ' ' + w2;
+          bi.set(bg, (bi.get(bg)||0) + 1);
+        }
+      }
+    }
+  }
+  const topUni = topN(uni, 20);
+  const topBi  = topN(bi, 15);
+
+  const wrap = document.querySelector('#kwChart').parentElement;
+  wrap.style.height = Math.max(160, topUni.length * 22 + 40) + 'px';
+
+  if (_charts.kw) _charts.kw.destroy();
+  _charts.kw = new Chart(document.getElementById('kwChart'), {
+    type: 'bar',
+    data: {
+      labels: topUni.map(([w]) => w),
+      datasets: [{ data: topUni.map(([,c]) => c), backgroundColor: '#4f9cf9', borderWidth: 0 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+                 tooltip: { callbacks: { label: c => c.raw.toLocaleString() + '회' } } },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+        y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const ul = document.getElementById('bigramList');
+  ul.innerHTML = topBi.length
+    ? topBi.map(([t,c]) => `<li><span class="term">${escHtml(t)}</span><span class="freq">${c}</span></li>`).join('')
+    : '<li class="term" style="color:var(--muted)">표현이 충분하지 않습니다.</li>';
+}
+
+function renderTopCited() {
+  const top = [...filtered].sort((a,b) => (b.citation_count||0) - (a.citation_count||0)).slice(0, 20);
+  const ol = document.getElementById('topCited');
+  ol.innerHTML = top.map(p => {
+    const doi = p.doi ? ('https://doi.org/' + p.doi) : '#';
+    const authors = Array.isArray(p.authors) ? p.authors.join(', ') : (p.authors || '');
+    const color = VENUE_COLORS[p.venue_id] || '#888';
+    return `<li>
+      <span class="cited-cite">${(p.citation_count||0).toLocaleString()}</span>
+      <div class="cited-main">
+        <a href="${doi}" target="_blank" rel="noopener">${renderTitle(p.title||'')}</a>
+        <div class="cited-meta">
+          <span class="badge" style="background:${color};font-size:10px">${escHtml(p.venue||'')}</span>
+          ${p.year||''} · ${escHtml(authors)}
+        </div>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+// 오버레이 바깥 클릭 / ESC 로 닫기
+document.getElementById('analytics-overlay').addEventListener('click', e => {
+  if (e.target.id === 'analytics-overlay') closeAnalytics();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAnalytics();
+});
+
 // ── 데이터 로드 ──────────────────────────────────────────────────────────
 
 (async function() {
@@ -438,6 +709,7 @@ function escHtml(s) {
     dataLoaded = true;
     updateSortHeaders();
     applyFilters();
+    if (location.hash === '#analytics') openAnalytics();
   } catch(e) {
     status.textContent = '⚠️ 데이터 로드 실패: ' + e.message;
     console.error(e);
