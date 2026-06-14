@@ -178,13 +178,13 @@
     <div class="kw-row">
       <span class="kw-label">KEYWORD</span>
       <input class="kw-input" id="kw1" placeholder="Keyword 1…"
-             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event,'kw2')">
       <div class="op-btn" id="op12">
         <button class="active" onclick="setOp('op12','AND',this)">AND</button>
         <button onclick="setOp('op12','OR',this)">OR</button>
       </div>
       <input class="kw-input" id="kw2" placeholder="Keyword 2…"
-             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event,'kw3')">
       <div class="op-btn" id="op23">
         <button class="active" onclick="setOp('op23','AND',this)">AND</button>
         <button onclick="setOp('op23','OR',this)">OR</button>
@@ -305,8 +305,13 @@ function updateSortHeaders() {
 
 // ── 이벤트 핸들러 ──────────────────────────────────────────────────────
 
-function handleSearchKey(e) {
-  if (e.key === 'Enter') applyFilters();
+function handleSearchKey(e, nextId) {
+  if (e.key === 'Enter') { applyFilters(); return; }
+  // Tab(시프트 없이) → 다음 키워드 입력칸으로 (중간 AND/OR 버튼 건너뜀)
+  if (e.key === 'Tab' && !e.shiftKey && nextId) {
+    const next = document.getElementById(nextId);
+    if (next) { e.preventDefault(); next.focus(); }
+  }
 }
 
 function markHasValue(el) {
