@@ -135,12 +135,19 @@ def main():
 
     # 최소 분리자로 직렬화 (공백 없음)
     out = json.dumps(slimmed, ensure_ascii=False, separators=(",", ":"))
+    raw = out.encode("utf-8")
+    print(f"  Slim JSON: {len(raw)/1024/1024:.1f} MB")
 
-    size_mb = len(out.encode("utf-8")) / 1024 / 1024
-    print(f"  Slim JSON: {size_mb:.1f} MB")
-
+    # 로컬 도구(eda.py 등)용 원본 JSON
     OUT_FILE.write_text(out, encoding="utf-8")
     print(f"✓ {OUT_FILE}")
+
+    # 웹 배포용 gzip (브라우저 DecompressionStream으로 해제) — mtime=0으로 재현성 확보
+    import gzip
+    gz_file = OUT_FILE.parent / (OUT_FILE.name + ".gz")
+    gz_bytes = gzip.compress(raw, compresslevel=9, mtime=0)
+    gz_file.write_bytes(gz_bytes)
+    print(f"✓ {gz_file} ({len(gz_bytes)/1024/1024:.1f} MB, {len(raw)/len(gz_bytes):.1f}x 압축)")
 
 
 if __name__ == "__main__":

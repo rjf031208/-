@@ -14,6 +14,9 @@ pipeline/word_book.*
 *.xlsx
 by_venue/
 
+# 원본 papers.json은 로컬 도구(eda.py)용 — 웹은 papers.json.gz만 사용
+papers.json
+
 # 이전 버전
 ver1/
 

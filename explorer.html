@@ -762,9 +762,20 @@ document.addEventListener('keydown', e => {
   }
   status.textContent = '데이터 로딩 중…';
   try {
-    const res = await fetch('papers.json');
-    if (!res.ok) throw new Error('papers.json 로드 실패: ' + res.status);
-    const raw = await res.json();
+    const res = await fetch('papers.json.gz');
+    if (!res.ok) throw new Error('papers.json.gz 로드 실패: ' + res.status);
+    // gzip 압축 데이터를 브라우저에서 해제 (DecompressionStream)
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    let jsonText;
+    if (bytes[0] === 0x1f && bytes[1] === 0x8b) {        // gzip 매직 넘버
+      if (!('DecompressionStream' in window))
+        throw new Error('이 브라우저는 gzip 해제를 지원하지 않습니다. 최신 브라우저로 접속하세요.');
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+      jsonText = await new Response(stream).text();
+    } else {                                              // 서버가 이미 해제한 경우(Content-Encoding)
+      jsonText = new TextDecoder().decode(bytes);
+    }
+    const raw = JSON.parse(jsonText);
     ALL_PAPERS = raw.map(p => ({
       venue_id:       p.v || '',
       venue:          p.j || '',
