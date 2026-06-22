@@ -154,6 +154,12 @@ OPENALEX_VENUES = [
         "issn_l": "0957-4174",   # Expert Systems with Applications (Elsevier)
         "years":  range(2000, 2027),
     },
+    {
+        "key":    "iotj",
+        "label":  "IoT-J",
+        "issn_l": "2327-4662",   # IEEE Internet of Things Journal
+        "years":  range(2014, 2027),
+    },
 
     # ── UAV ──────────────────────────────────────────────────────────────────
     {
@@ -218,6 +224,7 @@ VENUES_CFG = [
 
     # ── AI & Systems (노란/황금 계열) ─────────────────────────────────────────
     {"label": "ESWA",       "id": "eswa",       "color": "#f39c12", "since": 2000, "category": "AI & Systems"},
+    {"label": "IoT-J",      "id": "iotj",       "color": "#d4ac0d", "since": 2014, "category": "AI & Systems"},
 
     # ── Aerospace (보라 계열) ─────────────────────────────────────────────────
     {"label": "J.Aircraft", "id": "jaircraft",  "color": "#6a1b9a", "since": 2000, "category": "Aerospace"},
