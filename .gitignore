@@ -1,0 +1,36 @@
+# Claude Code 로컬 설정
+.claude/
+
+# 파이프라인 중간 데이터 (용량 과대)
+pipeline/dblp_raw/
+pipeline/openalex_raw/
+pipeline/crossref_raw/
+pipeline/crossref_cites/
+
+# 일회성 진단 스크립트·로그
+pipeline/_*.py
+pipeline/_*.json
+pipeline/*.log
+pipeline/all_dblp.json
+pipeline/all_enriched.json
+pipeline/enrich_cache.json
+pipeline/enriched_checkpoint_*.json
+pipeline/word_book.*
+
+# Excel 파일 (웹 서비스 불필요, 로컬에서만 사용)
+*.xlsx
+by_venue/
+
+# 원본 papers.json은 로컬 도구(eda.py)용 — 웹은 papers.json.gz만 사용
+papers.json
+
+# 이전 버전
+ver1/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# 학회 초록 캐시
+pipeline/conf_abstracts.json

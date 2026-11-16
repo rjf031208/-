@@ -1,0 +1,269 @@
+{
+ "build": "173c0dbbf903",
+ "updated": "2026-11-16",
+ "papers": 306230,
+ "with_abstract": 211231,
+ "files": {
+  "core": {
+   "name": "core.json.gz",
+   "bytes": 17173293
+  },
+  "doi": {
+   "name": "doi.json.gz",
+   "bytes": 1176892
+  },
+  "abs": {
+   "name": "abs.json.gz",
+   "bytes": 41549501
+  }
+ },
+ "categories": [
+  {
+   "name": "Robotics",
+   "color": "#1f77b4"
+  },
+  {
+   "name": "Control Theory",
+   "color": "#2ca02c"
+  },
+  {
+   "name": "Mechatronics",
+   "color": "#ff7f0e"
+  },
+  {
+   "name": "Aerospace",
+   "color": "#9467bd"
+  },
+  {
+   "name": "UAV",
+   "color": "#e74c3c"
+  },
+  {
+   "name": "Vehicle",
+   "color": "#8c564b"
+  },
+  {
+   "name": "AI & Systems",
+   "color": "#f39c12"
+  }
+ ],
+ "venues": [
+  {
+   "id": "tro",
+   "label": "T-RO",
+   "color": "#1f77b4",
+   "category": "Robotics",
+   "n": 3591
+  },
+  {
+   "id": "ijrr",
+   "label": "IJRR",
+   "color": "#4c9fda",
+   "category": "Robotics",
+   "n": 2298
+  },
+  {
+   "id": "scirob",
+   "label": "Sci-Rob",
+   "color": "#17becf",
+   "category": "Robotics",
+   "n": 978
+  },
+  {
+   "id": "ral",
+   "label": "RAL",
+   "color": "#0a5fa8",
+   "category": "Robotics",
+   "n": 11449
+  },
+  {
+   "id": "jirs",
+   "label": "JIRS",
+   "color": "#6baed6",
+   "category": "Robotics",
+   "n": 3542
+  },
+  {
+   "id": "icra",
+   "label": "ICRA",
+   "color": "#08306b",
+   "category": "Robotics",
+   "n": 25167
+  },
+  {
+   "id": "iros",
+   "label": "IROS",
+   "color": "#2b7bba",
+   "category": "Robotics",
+   "n": 23678
+  },
+  {
+   "id": "tcst",
+   "label": "T-CST",
+   "color": "#1a7a1a",
+   "category": "Control Theory",
+   "n": 5112
+  },
+  {
+   "id": "tac",
+   "label": "T-AC",
+   "color": "#2ca02c",
+   "category": "Control Theory",
+   "n": 12602
+  },
+  {
+   "id": "automatica",
+   "label": "Automatica",
+   "color": "#52be52",
+   "category": "Control Theory",
+   "n": 11101
+  },
+  {
+   "id": "cep",
+   "label": "CEP",
+   "color": "#27ae60",
+   "category": "Control Theory",
+   "n": 9093
+  },
+  {
+   "id": "jas",
+   "label": "JAS",
+   "color": "#16a085",
+   "category": "Control Theory",
+   "n": 2020
+  },
+  {
+   "id": "ijrnc",
+   "label": "IJRNC",
+   "color": "#98df8a",
+   "category": "Control Theory",
+   "n": 7063
+  },
+  {
+   "id": "nonlindyn",
+   "label": "NonlinDyn",
+   "color": "#3d8c3d",
+   "category": "Control Theory",
+   "n": 14593
+  },
+  {
+   "id": "jfi",
+   "label": "JFI",
+   "color": "#74c476",
+   "category": "Control Theory",
+   "n": 8260
+  },
+  {
+   "id": "mechatronics",
+   "label": "Mechatronics",
+   "color": "#e67e22",
+   "category": "Mechatronics",
+   "n": 3442
+  },
+  {
+   "id": "tmech",
+   "label": "T-Mech",
+   "color": "#ff7f0e",
+   "category": "Mechatronics",
+   "n": 6379
+  },
+  {
+   "id": "tie",
+   "label": "T-IE",
+   "color": "#d62728",
+   "category": "Mechatronics",
+   "n": 19593
+  },
+  {
+   "id": "tii",
+   "label": "T-II",
+   "color": "#e07070",
+   "category": "Mechatronics",
+   "n": 9795
+  },
+  {
+   "id": "aim",
+   "label": "AIM",
+   "color": "#a63603",
+   "category": "Mechatronics",
+   "n": 5746
+  },
+  {
+   "id": "eswa",
+   "label": "ESWA",
+   "color": "#f39c12",
+   "category": "AI & Systems",
+   "n": 30890
+  },
+  {
+   "id": "iotj",
+   "label": "IoT-J",
+   "color": "#d4ac0d",
+   "category": "AI & Systems",
+   "n": 19543
+  },
+  {
+   "id": "jaircraft",
+   "label": "J.Aircraft",
+   "color": "#6a1b9a",
+   "category": "Aerospace",
+   "n": 5239
+  },
+  {
+   "id": "taes",
+   "label": "T-AES",
+   "color": "#9467bd",
+   "category": "Aerospace",
+   "n": 8973
+  },
+  {
+   "id": "jgcd",
+   "label": "JGCD",
+   "color": "#c5b0d5",
+   "category": "Aerospace",
+   "n": 5599
+  },
+  {
+   "id": "ast",
+   "label": "AST",
+   "color": "#7b4d9e",
+   "category": "Aerospace",
+   "n": 11337
+  },
+  {
+   "id": "unmanned",
+   "label": "UnmannedSys",
+   "color": "#e74c3c",
+   "category": "UAV",
+   "n": 731
+  },
+  {
+   "id": "drones",
+   "label": "Drones",
+   "color": "#c0392b",
+   "category": "UAV",
+   "n": 4042
+  },
+  {
+   "id": "tits",
+   "label": "T-ITS",
+   "color": "#8c564b",
+   "category": "Vehicle",
+   "n": 11660
+  },
+  {
+   "id": "tvt",
+   "label": "T-VT",
+   "color": "#c49c94",
+   "category": "Vehicle",
+   "n": 20621
+  },
+  {
+   "id": "tiv",
+   "label": "T-IV",
+   "color": "#5b3a29",
+   "category": "Vehicle",
+   "n": 2093
+  }
+ ]
+}

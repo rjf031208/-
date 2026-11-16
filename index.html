@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Search</title>
+<style>
+  :root { --bg:#0f1117; --surface:#1a1d27; --border:#2d3148; --text:#e2e8f0; --muted:#718096; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif;
+         display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:48px 16px; }
+  h1 { font-size:32px; font-weight:800; margin-bottom:8px; }
+  .sub { color:var(--muted); margin-bottom:48px; font-size:15px; }
+  .cards { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:48px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+          padding:24px 28px; text-decoration:none; color:var(--text); width:220px;
+          transition:border-color .15s,transform .1s; }
+  .card:hover { border-color:#4f9cf9; transform:translateY(-2px); }
+  .card-icon { font-size:28px; margin-bottom:10px; }
+  .card-title { font-weight:700; font-size:15px; margin-bottom:6px; }
+  .card-desc { color:var(--muted); font-size:13px; line-height:1.5; }
+  .categories { display:flex; flex-direction:column; gap:10px; max-width:640px; width:100%; }
+  .cat-row { display:flex; align-items:center; gap:10px; }
+  .cat-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .cat-label { font-weight:600; width:140px; font-size:14px; }
+  .journals { color:var(--muted); font-size:13px; }
+  h2 { font-size:16px; font-weight:700; margin-bottom:16px; color:var(--muted);
+       text-transform:uppercase; letter-spacing:.5px; }
+</style>
+</head>
+<body>
+<h1>📄 Paper Search</h1>
+<p class="sub" id="subline">Robotics · Control Theory · Mechatronics · Aerospace · Vehicle</p>
+
+<div class="cards">
+  <a class="card" href="explorer.html">
+    <div class="card-icon">🔍</div>
+    <div class="card-title">Explorer</div>
+    <div class="card-desc">논문 검색, 저널/연도 필터, 인용수 정렬</div>
+  </a>
+  <a class="card" href="explorer.html#analytics">
+    <div class="card-icon">📈</div>
+    <div class="card-title">Data &amp; Download</div>
+    <div class="card-desc">검색 결과의 연도별 추세·저널 분포·키워드·인용 분석 및 Excel 다운로드</div>
+  </a>
+</div>
+
+<h2 id="coverageTitle">Coverage</h2>
+<div class="categories" id="coverage"></div>
+<script>
+// 저널 목록·논문 수는 data/meta.json 한 곳에서 관리한다 (파이프라인이 생성)
+fetch('data/meta.json', { cache: 'no-store' }).then(r => r.json()).then(m => {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const color = Object.fromEntries(m.categories.map(c => [c.name, c.color]));
+  const groups = new Map();
+  for (const v of m.venues) {
+    if (!groups.has(v.category)) groups.set(v.category, []);
+    groups.get(v.category).push(v.label);
+  }
+  document.getElementById('coverageTitle').textContent =
+    `Coverage — ${m.venues.length} venues · ${m.papers.toLocaleString()} papers · updated ${m.updated}`;
+  document.getElementById('coverage').innerHTML = [...groups].map(([cat, labels]) =>
+    `<div class="cat-row"><div class="cat-dot" style="background:${color[cat] || '#999'}"></div>` +
+    `<div class="cat-label">${esc(cat)}</div><div class="journals">${labels.map(esc).join(' · ')}</div></div>`).join('');
+  document.getElementById('subline').textContent = [...groups.keys()].join(' · ');
+}).catch(() => {});
+</script>
+</body>
+</html>

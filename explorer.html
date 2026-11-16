@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Search — Explorer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --border: #2d3148;
+    --text: #e2e8f0; --muted: #718096; --accent: #4f9cf9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  header .stamp { color: var(--muted); font-size: 12px; }
+  .layout { display: flex; height: calc(100vh - 60px); }
+  aside { width: 220px; min-width: 220px; border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; }
+  .search-bar { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  .search-bar input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+                       color: var(--text); padding: 6px 10px; outline: none; }
+  .search-bar select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+                        color: var(--text); padding: 6px 8px; outline: none; }
+  main { flex: 1; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface); padding: 8px 12px; text-align: left; font-size: 12px;
+              color: var(--muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1; cursor: pointer; user-select: none; }
+  thead th:hover { color: var(--text); }
+  thead th.sort-active { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: var(--surface); }
+  td { padding: 8px 12px; vertical-align: top; }
+  td.title a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  td.title a:hover { text-decoration: underline; }
+  td.authors { color: var(--muted); font-size: 12px; max-width: 220px; }
+  td.cite { text-align: right; color: #f6c90e; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px;
+            font-weight: 600; color: #fff; white-space: nowrap; }
+  .venue-group { margin-bottom: 8px; }
+  .group-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
+                  letter-spacing: .5px; display: block; margin-bottom: 4px; }
+  .venue-cb { display: flex; align-items: center; gap: 5px; cursor: pointer;
+               font-size: 12px; padding: 2px 0; white-space: nowrap; }
+  .venue-cb input { accent-color: var(--accent); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  #count { color: var(--muted); font-size: 12px; padding: 0 16px; line-height: 36px; }
+  .year-filter { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .year-filter input { width: 60px; background: var(--surface); border: 1px solid var(--border);
+                        border-radius: 4px; color: var(--text); padding: 3px 6px; }
+  /* keyword/author search */
+  .kw-row { display: flex; align-items: center; gap: 6px; padding: 6px 16px;
+             border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .kw-input { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+               color: var(--text); padding: 5px 10px; outline: none; width: 180px; font-size: 13px; }
+  .kw-input:focus { border-color: var(--accent); }
+  .kw-input.has-value { border-color: var(--accent); background: #1a2035; }
+  .op-btn { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .op-btn button { background: var(--surface); border: none; color: var(--muted); padding: 4px 10px;
+                    font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: .5px; }
+  .op-btn button.active { background: var(--accent); color: #fff; }
+  .kw-scope { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+               color: var(--text); padding: 4px 8px; font-size: 12px; outline: none; }
+  .kw-clear { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+               padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .kw-clear:hover { color: var(--text); border-color: var(--text); }
+  .kw-label { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .search-btn { background: var(--accent); border: none; border-radius: 6px; color: #fff;
+                 padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .search-btn:hover { opacity: .85; }
+  .home-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+               padding: 5px 12px; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .home-btn:hover { color: var(--text); border-color: var(--text); }
+  /* load more */
+  #load-more-area { padding: 16px; text-align: center; }
+  #loadMoreBtn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                  color: var(--text); padding: 10px 32px; font-size: 13px; cursor: pointer; }
+  #loadMoreBtn:hover { border-color: var(--accent); color: var(--accent); }
+  .load-note { color: var(--muted); font-size: 12px; }
+  .load-bar { height: 3px; background: var(--accent); width: 0; transition: width .2s; }
+  /* KaTeX inline sizing */
+  .katex { font-size: 1em; }
+  /* toolbar buttons */
+  .tool-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+               color: var(--text); padding: 5px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn:disabled { opacity: .5; cursor: progress; }
+  /* analytics inline (검색 결과 아래) */
+  #analytics-inline { border-top: 2px solid var(--accent); margin-top: 8px;
+                       padding: 20px 24px 80px; background: #131620; }
+  .an-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .an-head h2 { font-size: 17px; font-weight: 700; }
+  .an-head .muted { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  .an-block { margin-bottom: 32px; }
+  .an-block h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+  .chart-wrap { position: relative; }
+  .kw-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+  .bigram-list { list-style: none; }
+  .bigram-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px;
+                     padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .bigram-list .term { color: var(--text); }
+  .bigram-list .freq { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bigram-title { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase;
+                   letter-spacing: .5px; margin-bottom: 8px; }
+  .cited-list { list-style: none; counter-reset: cited; }
+  .cited-list li { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .cited-list li::before { counter-increment: cited; content: counter(cited); color: var(--muted);
+                            font-weight: 700; min-width: 22px; text-align: right; font-size: 13px; }
+  .cited-cite { color: #f6c90e; font-weight: 700; min-width: 56px; text-align: right;
+                 font-variant-numeric: tabular-nums; font-size: 13px; }
+  .cited-main { flex: 1; }
+  .cited-main a { color: var(--accent); text-decoration: none; font-weight: 500; font-size: 13px; }
+  .cited-main a:hover { text-decoration: underline; }
+  .cited-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  @media (max-width: 760px) { .kw-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home-btn" href="index.html">← Home</a>
+  <h1>📄 Paper Search — Explorer</h1>
+  <span class="stamp" id="stampUpdated"></span>
+  <span class="stamp" style="margin-left:auto" id="stampCount"></span>
+</header>
+<div class="load-bar" id="loadBar"></div>
+<div class="layout">
+  <aside>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;">Venues</div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:8px;cursor:pointer;">
+      <input type="checkbox" id="checkAll" checked onchange="toggleAll(this)"> All
+    </label>
+    <div id="venueList"></div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- 키워드 검색 행 -->
+    <div class="kw-row">
+      <span class="kw-label">KEYWORD</span>
+      <input class="kw-input" id="kw1" placeholder="Keyword 1…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event,'kw2')">
+      <div class="op-btn" id="op12">
+        <button class="active" onclick="setOp('op12','AND',this)">AND</button>
+        <button onclick="setOp('op12','OR',this)">OR</button>
+      </div>
+      <input class="kw-input" id="kw2" placeholder="Keyword 2…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event,'kw3')">
+      <div class="op-btn" id="op23">
+        <button class="active" onclick="setOp('op23','AND',this)">AND</button>
+        <button onclick="setOp('op23','OR',this)">OR</button>
+      </div>
+      <input class="kw-input" id="kw3" placeholder="Keyword 3…"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+      <select class="kw-scope" id="kwScope" title="검색 범위">
+        <option value="title">Title</option>
+        <option value="title_abstract" selected>Title + Abstract</option>
+        <option value="all">Title + Abstract + Authors</option>
+      </select>
+      <button class="search-btn" onclick="applyFilters()">검색</button>
+      <button class="kw-clear" onclick="clearKeywords()">✕ Clear</button>
+    </div>
+    <!-- 저자 검색 행 -->
+    <div class="kw-row">
+      <span class="kw-label">AUTHOR</span>
+      <input class="kw-input" id="authorKw" placeholder="Author name…" style="width:260px"
+             oninput="markHasValue(this)" onkeydown="handleSearchKey(event)">
+      <button class="search-btn" onclick="applyFilters()">검색</button>
+      <button class="kw-clear" onclick="clearAuthor()">✕ Clear</button>
+    </div>
+    <!-- 기본 필터 행 -->
+    <div class="search-bar">
+      <div class="year-filter">
+        <span>Year</span>
+        <input type="number" id="yearFrom" placeholder="from" oninput="applyFilters()">
+        <span>–</span>
+        <input type="number" id="yearTo" placeholder="to" oninput="applyFilters()">
+      </div>
+      <span id="count"></span>
+      <span id="loadNote" class="load-note"></span>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="tool-btn" id="excelBtn" onclick="exportExcel()">📥 Excel</button>
+        <button class="tool-btn" id="analyticsBtn" onclick="toggleAnalytics()">📊 데이터 분석</button>
+      </div>
+    </div>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th id="th-year" style="width:60px" onclick="toggleSort('year')">Year</th>
+            <th style="width:90px">Journal</th>
+            <th id="th-title" onclick="toggleSort('title')">Title</th>
+            <th style="width:200px">Authors</th>
+            <th id="th-cite" style="width:70px" onclick="toggleSort('cite')">Cited</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="load-more-area" style="display:none">
+        <button id="loadMoreBtn" onclick="loadMore()">더 보기</button>
+      </div>
+      <!-- 데이터 분석 (검색 결과 기준, 인라인) -->
+      <section id="analytics-inline" style="display:none">
+        <div class="an-head">
+          <h2>📊 데이터 분석<span class="muted" id="an-count"></span></h2>
+          <button class="tool-btn" onclick="hideAnalytics()">✕ 닫기</button>
+        </div>
+        <div class="an-block">
+          <h3>1. 연도별 출판 추세 — 이 주제가 언제 떴는가 (저널별 누적)</h3>
+          <div class="chart-wrap" style="height:320px"><canvas id="yearChart"></canvas></div>
+        </div>
+        <div class="an-block">
+          <h3>2. 저널 분포 — 현재 결과가 어느 저널에 모여 있는가</h3>
+          <div class="chart-wrap"><canvas id="venueChart"></canvas></div>
+        </div>
+        <div class="an-block">
+          <h3>3. 핵심 키워드 — 제목에 어떤 주제어가 자주 등장하는가</h3>
+          <div class="kw-grid">
+            <div class="chart-wrap"><canvas id="kwChart"></canvas></div>
+            <div>
+              <div class="bigram-title">자주 함께 쓰인 표현 (2-gram)</div>
+              <ul class="bigram-list" id="bigramList"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="an-block">
+          <h3>4. 최다 인용 논문 Top 20 — 반드시 봐야 할 핵심 논문</h3>
+          <ol class="cited-list" id="topCited"></ol>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+let VENUE_COLORS = {};      // id → color (data/meta.json 에서 채움)
+let META = null;
+let ALL_PAPERS = [];
+const PAGE_SIZE = 20;
+let filtered = [];
+let page = 0;
+let dataLoaded = false;
+
+const OPS = { op12: 'AND', op23: 'AND' };
+let sortState = { key: 'year', dir: 'desc' };  // key: year|title|cite, dir: asc|desc
+
+function toggleSort(key) {
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    sortState.key = key;
+    sortState.dir = key === 'title' ? 'asc' : 'desc';
+  }
+  updateSortHeaders();
+  applyFilters();
+}
+
+function updateSortHeaders() {
+  const labels = { year: 'Year', title: 'Title', cite: 'Cited' };
+  ['year','title','cite'].forEach(k => {
+    const th = document.getElementById('th-' + k);
+    if (!th) return;
+    const arrow = sortState.key === k ? (sortState.dir === 'asc' ? ' ↑' : ' ↓') : '';
+    th.textContent = labels[k] + arrow;
+    th.classList.toggle('sort-active', sortState.key === k);
+  });
+}
+
+// ── 이벤트 핸들러 ──────────────────────────────────────────────────────
+
+function handleSearchKey(e, nextId) {
+  if (e.key === 'Enter') { applyFilters(); return; }
+  // Tab(시프트 없이) → 다음 키워드 입력칸으로 (중간 AND/OR 버튼 건너뜀)
+  if (e.key === 'Tab' && !e.shiftKey && nextId) {
+    const next = document.getElementById(nextId);
+    if (next) { e.preventDefault(); next.focus(); }
+  }
+}
+
+function markHasValue(el) {
+  el.classList.toggle('has-value', el.value.trim() !== '');
+}
+
+function setOp(groupId, op, btn) {
+  OPS[groupId] = op;
+  document.querySelectorAll(`#${groupId} button`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function clearKeywords() {
+  ['kw1','kw2','kw3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.classList.remove('has-value');
+  });
+  applyFilters();
+}
+
+function clearAuthor() {
+  const el = document.getElementById('authorKw');
+  el.value = '';
+  el.classList.remove('has-value');
+  applyFilters();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.venue-cb input').forEach(c => { c.checked = cb.checked; });
+  applyFilters();
+}
+
+// ── 텍스트 정규화 / LaTeX 렌더링 ────────────────────────────────────────
+
+const TITLE_COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base' });
+const NON_ASCII = /[^\x00-\x7f]/;
+function normalizeText(str) {
+  if (!NON_ASCII.test(str)) return str.toLowerCase();   // 영문만 있으면 소문자화로 충분
+  return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function preprocessLatex(math) {
+  return math
+    .replace(/\{\\cal\s+([^}]+)\}/g,  '\\mathcal{$1}')
+    .replace(/\{\\bf\s+([^}]+)\}/g,   '\\mathbf{$1}')
+    .replace(/\{\\it\s+([^}]+)\}/g,   '\\mathit{$1}')
+    .replace(/\{\\rm\s+([^}]+)\}/g,   '\\mathrm{$1}')
+    .replace(/\{\\tt\s+([^}]+)\}/g,   '\\texttt{$1}')
+    .replace(/\{\\em\s+([^}]+)\}/g,   '\\textit{$1}');
+}
+
+function renderTitle(title) {
+  if (!title) return '';
+  const parts = title.split(/(\$[^$]+\$)/g);
+  return parts.map(part => {
+    if (part.startsWith('$') && part.endsWith('$') && typeof katex !== 'undefined') {
+      const math = preprocessLatex(part.slice(1, -1));
+      try {
+        return katex.renderToString(math, { throwOnError: false, output: 'html' });
+      } catch(e) {
+        return escHtml(part);
+      }
+    }
+    return escHtml(part);
+  }).join('');
+}
+
+// ── 키워드 매칭 ──────────────────────────────────────────────────────────
+
+// 검색어는 검색 1회당 한 번만 정규화하고, 범위(scope)에 필요한 필드만 검사한다.
+// 논문 쪽 정규화 텍스트(_t/_ab/_au)는 로딩 시 미리 계산해 둔다.
+function makeKwMatcher(kws, ops, scope) {
+  const terms = kws.map(k => normalizeText(k).trim()).filter(k => k);
+  if (!terms.length) return null;
+  const has =
+    scope === 'title'          ? (p, t) => p._t.includes(t) :
+    scope === 'title_abstract' ? (p, t) => p._t.includes(t) || p._ab.includes(t) :
+                                 (p, t) => p._t.includes(t) || p._ab.includes(t) || p._au.includes(t);
+  return p => {
+    let result = has(p, terms[0]);
+    for (let i = 1; i < terms.length; i++) {
+      const hit = has(p, terms[i]);
+      result = ops[i-1] === 'AND' ? (result && hit) : (result || hit);
+    }
+    return result;
+  };
+}
+
+// ── 필터 적용 ────────────────────────────────────────────────────────────
+
+function applyFilters() {
+  if (!dataLoaded) return;
+  const kw1      = document.getElementById('kw1').value;
+  const kw2      = document.getElementById('kw2').value;
+  const kw3      = document.getElementById('kw3').value;
+  const authorKw = normalizeText(document.getElementById('authorKw').value.trim());
+  const scope    = document.getElementById('kwScope').value;
+  const yearFrom = parseInt(document.getElementById('yearFrom').value) || 0;
+  const yearTo   = parseInt(document.getElementById('yearTo').value)   || 9999;
+  const checked  = new Set([...document.querySelectorAll('.venue-cb input:checked')].map(c => c.value));
+  const ops = [OPS.op12, OPS.op23];
+
+  const match = makeKwMatcher([kw1, kw2, kw3], ops, scope);
+  filtered = ALL_PAPERS.filter(p => {
+    if (!checked.has(p.venue_id)) return false;
+    if (p.year < yearFrom || p.year > yearTo) return false;
+    if (authorKw && !p._au.includes(authorKw)) return false;
+    return match === null || match(p);
+  });
+
+  const d = sortState.dir === 'asc' ? 1 : -1;
+  if      (sortState.key === 'year')  filtered.sort((a,b) => d * ((a.year||0)-(b.year||0)));
+  else if (sortState.key === 'title') filtered.sort((a,b) => d * TITLE_COLLATOR.compare(a.title, b.title));
+  else if (sortState.key === 'cite')  filtered.sort((a,b) => d * ((a.citation_count||0)-(b.citation_count||0)));
+
+  document.getElementById('count').textContent = filtered.length.toLocaleString() + ' papers';
+  page = 0;
+  document.getElementById('tbody').innerHTML = '';
+  renderPage();
+  // 분석 패널이 열려 있으면 새 검색 결과로 갱신
+  if (analyticsVisible) renderAnalytics();
+}
+
+// ── 렌더링 ──────────────────────────────────────────────────────────────
+
+function renderPage() {
+  const start = page * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+  if (!slice.length) {
+    updateLoadMoreBtn();
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  slice.forEach(p => {
+    const tr = document.createElement('tr');
+    const color = VENUE_COLORS[p.venue_id] || '#999';
+    const doi   = p.doi ? `https://doi.org/${p.doi}` : '#';
+    const authors = (p.authors || '').replaceAll('; ', ', ');
+    const short_authors = authors.length > 80 ? authors.slice(0,80)+'…' : authors;
+    tr.innerHTML = `
+      <td>${p.year||''}</td>
+      <td><span class="badge" style="background:${color}">${p.venue||''}</span></td>
+      <td class="title"><a href="${doi}" target="_blank" rel="noopener">${renderTitle(p.title||'')}</a></td>
+      <td class="authors" title="${escHtml(authors)}">${escHtml(short_authors)}</td>
+      <td class="cite">${p.citation_count||''}</td>
+    `;
+    frag.appendChild(tr);
+  });
+  document.getElementById('tbody').appendChild(frag);
+  page++;
+  updateLoadMoreBtn();
+}
+
+// 이미 화면에 있는 행을 현재 데이터로 다시 그린다 (DOI가 뒤늦게 도착했을 때)
+function refreshVisibleRows() {
+  const shown = page;
+  page = 0;
+  document.getElementById('tbody').innerHTML = '';
+  for (let k = 0; k < Math.max(shown, 1); k++) renderPage();
+}
+
+function loadMore() {
+  renderPage();
+}
+
+function updateLoadMoreBtn() {
+  const area = document.getElementById('load-more-area');
+  const btn  = document.getElementById('loadMoreBtn');
+  const remaining = filtered.length - page * PAGE_SIZE;
+  if (remaining > 0) {
+    area.style.display = '';
+    btn.textContent = `더 보기 (${remaining.toLocaleString()}개 남음)`;
+  } else {
+    area.style.display = 'none';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Excel 내보내기 (현재 필터 결과) ──────────────────────────────────────
+
+async function exportExcel() {
+  if (!filtered.length) { alert('내보낼 데이터가 없습니다.'); return; }
+  const btn = document.getElementById('excelBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 생성 중…';
+  try {
+    // 초록 원문은 메모리에 두지 않으므로(검색용 소문자본만 보관) 내보낼 때 다시 읽는다.
+    // 한 번 받은 파일은 브라우저에 저장돼 있어 재다운로드는 일어나지 않는다.
+    const abs = await loadData('abs');
+    await new Promise(r => setTimeout(r, 30));          // 버튼 상태가 그려질 틈
+    const rows = filtered.map(p => ({
+      Year:      p.year || '',
+      Venue:     p.venue || '',
+      Title:     p.title || '',
+      Authors:   p.authors || '',
+      DOI:       p.doi ? ('https://doi.org/' + p.doi) : '',
+      Citations: p.citation_count || 0,
+      Abstract:  abs[p.i] || '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{wch:6},{wch:12},{wch:60},{wch:30},{wch:32},{wch:9},{wch:80}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Papers');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `paper_search_${filtered.length}_${stamp}.xlsx`);
+  } catch (e) {
+    alert('엑셀 생성 실패: ' + e.message);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+// ── 데이터 분석 ──────────────────────────────────────────────────────────
+
+let _charts = { year: null, venue: null, kw: null };
+
+const STOPWORDS = new Set(([
+  'the','a','an','of','for','and','or','to','in','on','with','via','using','use','used',
+  'based','from','by','at','as','is','are','be','this','that','these','those','its','it',
+  'we','our','can','new','novel','approach','approaches','method','methods','study',
+  'analysis','toward','towards','under','over','into','between','their','they','than',
+  'when','which','while','also','such','some','non','vol','no','pp','part','case','cases',
+  'paper','results','result','two','three','one','high','low','large','small','more','most',
+  'about','through','within','without','during','each','both','all','its','has','have'
+]));
+
+function tokenizeTitle(title) {
+  return (title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function isContentWord(w) {
+  return w.length >= 3 && !STOPWORDS.has(w) && !/^\d+$/.test(w) && !/^-+$/.test(w);
+}
+
+function topN(map, n) {
+  return [...map.entries()].sort((a,b) => b[1]-a[1]).slice(0, n);
+}
+
+let analyticsVisible = false;
+
+function toggleAnalytics() {
+  if (analyticsVisible) hideAnalytics();
+  else openAnalytics();
+}
+
+function openAnalytics() {
+  if (!dataLoaded) return;
+  if (!filtered.length) { alert('분석할 데이터가 없습니다. 검색 조건을 확인하세요.'); return; }
+  analyticsVisible = true;
+  document.getElementById('analytics-inline').style.display = 'block';
+  document.getElementById('analyticsBtn').textContent = '📊 분석 닫기';
+  renderAnalytics();
+  // 렌더 후 분석 영역으로 스크롤
+  requestAnimationFrame(() => {
+    document.getElementById('analytics-inline').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function hideAnalytics() {
+  analyticsVisible = false;
+  document.getElementById('analytics-inline').style.display = 'none';
+  document.getElementById('analyticsBtn').textContent = '📊 데이터 분석';
+  if (_charts.year)  { _charts.year.destroy();  _charts.year = null; }
+  if (_charts.venue) { _charts.venue.destroy(); _charts.venue = null; }
+  if (_charts.kw)    { _charts.kw.destroy();    _charts.kw = null; }
+}
+
+// 검색 결과 기준으로 4종 분석 렌더 (검색할 때마다 갱신)
+function renderAnalytics() {
+  if (!analyticsVisible || !filtered.length) return;
+  document.getElementById('an-count').textContent =
+    ' · ' + filtered.length.toLocaleString() + '편 대상';
+  renderYearChart();
+  renderVenueChart();
+  renderKeywordChart();
+  renderTopCited();
+}
+
+function renderYearChart() {
+  // year → venue_id → count
+  const byYear = new Map();
+  const venuesSeen = new Map();   // venue_id → label
+  let minY = 9999, maxY = 0;
+  for (const p of filtered) {
+    const y = parseInt(p.year) || 0;
+    if (y < 1990 || y > 2100) continue;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    const id = p.venue_id || 'etc';
+    venuesSeen.set(id, p.venue || id);
+    let row = byYear.get(y);
+    if (!row) { row = new Map(); byYear.set(y, row); }
+    row.set(id, (row.get(id) || 0) + 1);
+  }
+  if (maxY < minY) { if (_charts.year) { _charts.year.destroy(); _charts.year = null; } return; }
+
+  const years = [];
+  for (let y = minY; y <= maxY; y++) years.push(y);
+
+  // 총량 많은 저널 순으로 정렬해 색상 일관성
+  const venueTotals = new Map();
+  for (const [, row] of byYear) for (const [id, c] of row) venueTotals.set(id, (venueTotals.get(id)||0)+c);
+  const venueIds = [...venuesSeen.keys()].sort((a,b) => (venueTotals.get(b)||0)-(venueTotals.get(a)||0));
+
+  const datasets = venueIds.map(id => ({
+    label: venuesSeen.get(id),
+    data: years.map(y => (byYear.get(y)?.get(id)) || 0),
+    backgroundColor: VENUE_COLORS[id] || '#888',
+    borderWidth: 0,
+  }));
+
+  if (_charts.year) _charts.year.destroy();
+  _charts.year = new Chart(document.getElementById('yearChart'), {
+    type: 'bar',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom',
+                  labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 10 } } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#718096' }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: '#718096' }, grid: { color: '#2d3148' } }
+      }
+    }
+  });
+}
+
+function renderVenueChart() {
+  const counts = new Map();   // venue_id → {label, count}
+  for (const p of filtered) {
+    const id = p.venue_id || 'etc';
+    const e = counts.get(id) || { label: p.venue || id, count: 0 };
+    e.count++; counts.set(id, e);
+  }
+  const sorted = [...counts.entries()].sort((a,b) => b[1].count - a[1].count);
+  const labels = sorted.map(([,e]) => e.label);
+  const data   = sorted.map(([,e]) => e.count);
+  const colors = sorted.map(([id]) => VENUE_COLORS[id] || '#888');
+  const total  = filtered.length;
+
+  const wrap = document.querySelector('#venueChart').parentElement;
+  wrap.style.height = Math.max(160, sorted.length * 26 + 40) + 'px';
+
+  if (_charts.venue) _charts.venue.destroy();
+  _charts.venue = new Chart(document.getElementById('venueChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => `${c.raw.toLocaleString()}편 (${(c.raw/total*100).toFixed(1)}%)` } }
+      },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+        y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderKeywordChart() {
+  const uni = new Map(), bi = new Map();
+  for (const p of filtered) {
+    const words = tokenizeTitle(p.title);
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      if (isContentWord(w)) uni.set(w, (uni.get(w)||0) + 1);
+      if (i + 1 < words.length) {
+        const w2 = words[i+1];
+        if (isContentWord(w) && isContentWord(w2)) {
+          const bg = w + ' ' + w2;
+          bi.set(bg, (bi.get(bg)||0) + 1);
+        }
+      }
+    }
+  }
+  const topUni = topN(uni, 20);
+  const topBi  = topN(bi, 15);
+
+  const wrap = document.querySelector('#kwChart').parentElement;
+  wrap.style.height = Math.max(160, topUni.length * 22 + 40) + 'px';
+
+  if (_charts.kw) _charts.kw.destroy();
+  _charts.kw = new Chart(document.getElementById('kwChart'), {
+    type: 'bar',
+    data: {
+      labels: topUni.map(([w]) => w),
+      datasets: [{ data: topUni.map(([,c]) => c), backgroundColor: '#4f9cf9', borderWidth: 0 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+                 tooltip: { callbacks: { label: c => c.raw.toLocaleString() + '회' } } },
+      scales: {
+        x: { ticks: { color: '#718096' }, grid: { color: '#2d3148' } },
+        y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const ul = document.getElementById('bigramList');
+  ul.innerHTML = topBi.length
+    ? topBi.map(([t,c]) => `<li><span class="term">${escHtml(t)}</span><span class="freq">${c}</span></li>`).join('')
+    : '<li class="term" style="color:var(--muted)">표현이 충분하지 않습니다.</li>';
+}
+
+function renderTopCited() {
+  const top = [...filtered].sort((a,b) => (b.citation_count||0) - (a.citation_count||0)).slice(0, 20);
+  const ol = document.getElementById('topCited');
+  ol.innerHTML = top.map(p => {
+    const doi = p.doi ? ('https://doi.org/' + p.doi) : '#';
+    const authors = (p.authors || '').replaceAll('; ', ', ');
+    const color = VENUE_COLORS[p.venue_id] || '#888';
+    return `<li>
+      <span class="cited-cite">${(p.citation_count||0).toLocaleString()}</span>
+      <div class="cited-main">
+        <a href="${doi}" target="_blank" rel="noopener">${renderTitle(p.title||'')}</a>
+        <div class="cited-meta">
+          <span class="badge" style="background:${color};font-size:10px">${escHtml(p.venue||'')}</span>
+          ${p.year||''} · ${escHtml(authors)}
+        </div>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+// ESC 로 분석 닫기
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && analyticsVisible) hideAnalytics();
+});
+
+// ── 데이터 로드 ──────────────────────────────────────────────────────────
+
+const DATA_DIR = 'data/';
+const DATA_CACHE = 'paper-search-data';
+let absLoaded = false;
+
+function setLoadNote(text, frac) {
+  document.getElementById('loadNote').textContent = text || '';
+  const bar = document.getElementById('loadBar');
+  bar.style.width = frac == null ? '0' : Math.round(frac * 100) + '%';
+}
+
+// data/<name>.json.gz 를 받아 JSON으로 돌려준다.
+// 빌드 ID가 붙은 주소로 브라우저 Cache Storage에 저장해 두므로, 데이터가 바뀌지 않는 한
+// 두 번째 방문부터는 네트워크를 쓰지 않는다.
+async function loadData(name, onProgress) {
+  const info = META.files[name];
+  const url = DATA_DIR + info.name + '?v=' + META.build;
+  let cache = null, res = null;
+  try { cache = await caches.open(DATA_CACHE); res = await cache.match(url); } catch (e) { /* 사생활 보호 모드 등 */ }
+
+  let blob;
+  if (res) {
+    blob = await res.blob();
+  } else {
+    const net = await fetch(url);
+    if (!net.ok) throw new Error(info.name + ' 로드 실패: ' + net.status);
+    const reader = net.body.getReader();
+    const chunks = [];
+    let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      got += value.length;
+      if (onProgress) onProgress(Math.min(got / info.bytes, 1));
+    }
+    blob = new Blob(chunks);
+    if (cache) {
+      try {
+        await cache.put(url, new Response(blob));
+        // 같은 파일의 이전 빌드는 지운다
+        for (const req of await cache.keys())
+          if (req.url.includes('/' + info.name + '?v=') && !req.url.endsWith('?v=' + META.build))
+            await cache.delete(req);
+      } catch (e) { /* 저장 공간 부족 등 — 저장 없이 계속 */ }
+    }
+  }
+
+  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  if (head[0] === 0x1f && head[1] === 0x8b) {            // gzip 매직 넘버
+    if (!('DecompressionStream' in window))
+      throw new Error('이 브라우저는 gzip 해제를 지원하지 않습니다. 최신 브라우저로 접속하세요.');
+    return new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).json();
+  }
+  return new Response(blob).json();                       // 서버가 이미 해제한 경우
+}
+
+function buildSidebar() {
+  const groups = new Map();
+  for (const v of META.venues) {
+    if (!groups.has(v.category)) groups.set(v.category, []);
+    groups.get(v.category).push(v);
+    VENUE_COLORS[v.id] = v.color;
+  }
+  const catColor = Object.fromEntries(META.categories.map(c => [c.name, c.color]));
+  document.getElementById('venueList').innerHTML = [...groups].map(([cat, vs]) =>
+    `<div class="venue-group"><span class="group-label" style="color:${catColor[cat] || '#999'}">${escHtml(cat)}</span>` +
+    vs.map(v =>
+      `<label class="venue-cb" title="${v.n.toLocaleString()} papers">` +
+      `<input type="checkbox" value="${escHtml(v.id)}" checked onchange="applyFilters()">` +
+      `<span class="dot" style="background:${v.color}"></span>${escHtml(v.label)}</label>`).join('') +
+    `</div>`).join('');
+  document.getElementById('stampUpdated').textContent = 'Updated ' + META.updated;
+  document.getElementById('stampCount').textContent =
+    META.papers.toLocaleString() + ' papers · ' + META.venues.length + ' venues';
+}
+
+(async function() {
+  const status = document.getElementById('count');
+  if (location.protocol === 'file:') {
+    status.innerHTML = '⚠️ 로컬 파일로 직접 열면 데이터를 불러올 수 없습니다.'
+      + ' <b>serve.bat</b>를 실행한 후 <a href="http://localhost:8080" style="color:var(--accent)">http://localhost:8080</a> 으로 접속하세요.';
+    return;
+  }
+  const mb = n => (n / 1048576).toFixed(0) + 'MB';
+  try {
+    // 1) 메타(수 KB): 항상 최신을 받는다 — 여기 든 빌드 ID가 나머지 파일의 캐시 키
+    const m = await fetch(DATA_DIR + 'meta.json', { cache: 'no-store' });
+    if (!m.ok) throw new Error('meta.json 로드 실패: ' + m.status);
+    META = await m.json();
+    buildSidebar();
+
+    // 2) 목록(제목·저자·연도·인용수): 이것만 있으면 검색을 시작할 수 있다
+    status.textContent = '논문 목록 불러오는 중…';
+    const core = await loadData('core', f => setLoadNote(`${mb(f * META.files.core.bytes)} / ${mb(META.files.core.bytes)}`, f * 0.9));
+    const venues = META.venues;
+    const n = core.t.length;
+    ALL_PAPERS = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const v = venues[core.v[i]], title = core.t[i], authors = core.a[i];
+      ALL_PAPERS[i] = {
+        i,                                    // 파일 내 순번 (doi·abs 파일과 같은 순서)
+        venue_id: v.id, venue: v.label,
+        year: core.y[i], citation_count: core.c[i],
+        title, authors, doi: '',
+        // 검색용 정규화 텍스트 (검색마다 재계산하지 않도록 1회만)
+        _t: normalizeText(title), _au: normalizeText(authors), _ab: '',
+      };
+    }
+    dataLoaded = true;
+    performance.mark('core-ready');
+    setLoadNote('', null);
+    updateSortHeaders();
+    applyFilters();
+    if (location.hash === '#analytics') openAnalytics();
+
+    // 3) DOI(작음): 받는 즉시 링크 연결
+    const dois = await loadData('doi');
+    for (let i = 0; i < n; i++) ALL_PAPERS[i].doi = dois[i];
+    refreshVisibleRows();
+
+    // 4) 초록(큼): 뒤에서 받는다. 그동안은 제목·저자 검색만 된다.
+    const abs = await loadData('abs', f => setLoadNote(`초록 불러오는 중 ${Math.round(f * 100)}% — 제목·저자 검색은 지금 가능`, null));
+    for (let i = 0; i < n; i += 20000) {      // 화면이 멈추지 않게 나눠서 처리
+      const end = Math.min(i + 20000, n);
+      for (let k = i; k < end; k++) if (abs[k]) ALL_PAPERS[k]._ab = normalizeText(abs[k]);
+      await new Promise(r => setTimeout(r, 0));
+    }
+    absLoaded = true;
+    performance.mark('abs-ready');
+    setLoadNote('', null);
+    // 초록까지 보는 검색이 걸려 있었다면 결과가 달라지므로 다시 계산
+    const hasKw = ['kw1', 'kw2', 'kw3'].some(id => document.getElementById(id).value.trim());
+    if (hasKw && document.getElementById('kwScope').value !== 'title') applyFilters();
+  } catch(e) {
+    setLoadNote('', null);
+    status.textContent = '⚠️ 데이터 로드 실패: ' + e.message;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
